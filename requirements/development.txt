@@ -1,0 +1,14 @@
+asgiref==3.11.1
+colorama==0.4.6
+Django==5.2.4
+djangorestframework==3.15.0
+iniconfig==2.3.0
+packaging==26.0
+pluggy==1.6.0
+Pygments==2.20.0
+pytest==9.0.2
+pytest-django==4.12.0
+sqlparse==0.5.5
+tzdata==2026.1
+factory_boy==3.3.3
+faker==40.13.0
