@@ -1,7 +1,7 @@
 from .models import User 
 from .tasks import send_verification_email
 from django.contrib.auth import authenticate
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
 
 class AuthService:
     def __init__(self):
@@ -15,8 +15,9 @@ class AuthService:
         return user
     
     def login_user(self, email, password):
-        user = authenticate(request=None, username=email, password=password)
-        if user and user.is_verified:
-            return user, f"User Logged in successfully"
-        raise AuthenticationFailed("User is not verified")
-    
+        user = authenticate(username=email, password=password)
+        if user is None:
+            raise AuthenticationFailed("Invalid credentials")  
+        if not user.is_verified:
+            raise PermissionDenied("Please verify your email")  
+        return user

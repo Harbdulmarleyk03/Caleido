@@ -72,47 +72,61 @@ class TestRegisterView:
         response = api_client.post('/api/v1/auth/register/', data, format='json')
         assert response.status_code == 400
 
-
 @pytest.mark.django_db
 class TestLoginView:
 
     def test_login_success(self, api_client):
+        user = User.objects.create_user(
+            username='johndoe',
+            email="john@example.com",
+            password="Secure123",
+            is_verified=True
+        )
         data = {
-            'email': 'john@example.com',
-            'password': 'Secure123',
+            'username': 'johndoe',
+            "email": "john@example.com",
+            "password": "Secure123",
         }
-
-        response = api_client.post('/api/v1/auth/login/', data, format='json')
+        response = api_client.post("/api/v1/auth/login/", data, format="json")
 
         assert response.status_code == 200
-        assert 'access' in response.data
-        assert 'refresh' in response.data
+        assert "access" in response.data
+        assert "refresh" in response.data
 
     def test_login_wrong_password(self, api_client):
+        User.objects.create_user(
+            username='johndoe',
+            email="john@example.com",
+            password="Secure123",
+            is_verified=True
+        )
         data = {
-            'email': 'john@example.com',
-            'password': 'Wrongpassword',
+            'username': 'johndoe',
+            "email": "john@example.com",
+            "password": "Wrongpassword",
         }
-
-        response = api_client.post('/api/v1/auth/login/', data, format='json')
-
+        response = api_client.post("/api/v1/auth/login/", data, format="json")
         assert response.status_code == 401
-        
+
     def test_login_unverified_user(self, api_client):
+        User.objects.create_user(
+            username= 'johndoe',
+            email="john@example.com",
+            password="Secure123",
+            is_verified=False
+        )
         data = {
-            'email': 'john@example.com',
-            'password': 'Wrongpassword',
+            'username': 'johndoe',
+            "email": "john@example.com",
+            "password": "Secure123",
         }
-        user = authenticate(is_verified=False, **data)
-        
-        response = api_client.post('/api/v1/auth/login/', data, format='json')
+        response = api_client.post("/api/v1/auth/login/", data, format="json")
         assert response.status_code == 403
 
     def test_login_nonexistent_email(self, api_client):
         data = {
-            'email': 'john@example.ku',
-            'password': 'Wrongpassword',
+            "email": "doesnotexist@example.com",
+            "password": "Secure123",
         }
-        
-        response = api_client.post('/api/v1/auth/login/', data, format='json')
+        response = api_client.post("/api/v1/auth/login/", data, format="json")
         assert response.status_code == 401

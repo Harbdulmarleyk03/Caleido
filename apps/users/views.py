@@ -30,13 +30,12 @@ class LoginView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            user = auth_service.login_user(serializer.validated_data)
-            refresh = RefreshToken.for_user(user)
-            access = refresh.access_token
-            return Response({"access": str(access), "refresh": str(refresh)}, status=status.HTTP_200_OK)
-        return Response({'detail': 'User is not verified'}, status=status.HTTP_403_FORBIDDEN)
-    
+        serializer.is_valid(raise_exception=True)  
+        user = auth_service.login_user(**serializer.validated_data)
+        refresh = RefreshToken.for_user(user)
+        access = refresh.access_token
+        return Response({"access": str(access), "refresh": str(refresh)}, status=status.HTTP_200_OK)
+
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
