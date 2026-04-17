@@ -17,12 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
-from apps.users import views 
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/users/', include('apps.users.urls.urls')),
     path('api/v1/auth/', include('apps.users.urls.auth')),
+    path('api/v1/auth/token/refresh/', TokenRefreshView.as_view(), name='token-refresh'),
+
 ]
 
 if settings.DEBUG:
