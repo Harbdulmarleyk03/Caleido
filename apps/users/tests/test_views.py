@@ -1,8 +1,10 @@
 import pytest 
-from apps.users.models import User
+from apps.users.models import OutstandingToken, User
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.users.tests.factories import UserFactory
+from conftest import user
+from rest_framework.response import Response
 
 @pytest.mark.django_db
 class TestRegisterView:
@@ -163,40 +165,71 @@ class TestTokenRefreshView:
         
         assert response.status_code == 401
 
+@pytest.mark.django_db
+class TestLogoutView:
 
-    '''def test_refresh_success(self, api_client):
-        token_data = {
-            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2NDIwMDU2LCJpYXQiOjE3NzY0MTkxNTcsImp0aSI6ImVmNWIxNjQwMWQyNzRkOWJiYjMxNDk2NjU3MjAxNjlhIiwidXNlcl9pZCI6ImE4Zjk3NDgzLTY0YjctNGIzMy1iMGI3LWZlM2FkNDkxODliYiJ9.vOdyW7XkILQ6ipsw9lIRUhvdEu9mBh3q71-IYKFxwPo",
-            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3NzAyMzk1NiwiaWF0IjoxNzc2NDE5MTU2LCJqdGkiOiI5OGI2ZTNlN2VjMDU0NTZmYjY4MGFjZGVlMjU0ZTI0OSIsInVzZXJfaWQiOiJhOGY5NzQ4My02NGI3LTRiMzMtYjBiNy1mZTNhZDQ5MTg5YmIifQ.ssNxXRB8eDJhMB7e4fm-kZ0QvQ5XJpipAfcR9VcOkuk"
-        }
+    def test_logout_success(self, api_client):
+        user = UserFactory(is_verified=True)
+        refresh = RefreshToken.for_user(user)
+        api_client.force_authenticate(user=user)
+        response = api_client.post('/api/v1/auth/logout/', {'refresh': str(refresh)}, format='json')
+
+        assert response.status_code == 204 
+
+    def test_logout_unauthenticated(self, api_client):
+
+        response = api_client.post('/api/v1/auth/logout/', format='json')
+        assert response.status_code == 401 
+
+    def test_logout_invalid_token(self, api_client):
+        user = UserFactory(is_verified=True)
+        refresh = 'Not.a.valid.token'
+        try:
+            token = RefreshToken(refresh)  # must be inside try
+            token.blacklist()
+        except Exception:
+            return Response({'error': 'Invalid token'}, status=400)
+        api_client.force_authenticate(user=user)
+
+        response = api_client.post('/api/v1/auth/logout/', {'refresh': str(refresh)}, format='json')
+        assert response.status_code == 400 
         
-        new_data = {
-            "new_access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2NDIwNDMwLCJpYXQiOjE3NzY0MTk1MzAsImp0aSI6IjE0ZjdmMjkwODViZTRhOGQ4MjU1ODVhMWI5ZGM0N2IzIiwidXNlcl9pZCI6ImE4Zjk3NDgzLTY0YjctNGIzMy1iMGI3LWZlM2FkNDkxODliYiJ9.c27D0GliQsU7CFOzhVHgI2pVi0IBFhdF919uaiiCwig",
-            "new_refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3NzAyMzk1NiwiaWF0IjoxNzc2NDE5MTU2LCJqdGkiOiI5OGI2ZTNlN2VjMDU0NTZmYjY4MGFjZGVlMjU0ZTI0OSIsInVzZXJfaWQiOiJhOGY5NzQ4My02NGI3LTRiMzMtYjBiNy1mZTNhZDQ5MTg5YmIifQ.ssNxXRB8eDJhMB7e4fm-kZ0QvQ5XJpipAfcR9VcOkuk"
-        }
 
-        response = api_client.post('/api/v1/auth/token/refresh/', token_data, format='json')
-        assert response.status_code == 200
+    def test_logout_all_blacklist_all_tokens(self, api_client):
+        user = User.objects.create_user(
+                username= 'johndoe',
+                email="john@example.com",
+                password="Secure123",
+                is_verified=True
+            )
+        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+        refresh = RefreshToken.for_user(user)
+        tokens = OutstandingToken.objects.filter(user=user)
+        api_client.force_authenticate(user=user)
 
+        response = api_client.post('/api/v1/auth/logout-all/', {'tokens': str(tokens), 'refresh': str(refresh)}, format='json')
 
-    def test_refresh_invalid_token(self, api_client):
-        token_data = {
-            'access': 'UEGddbbgdkke7549u3hvdfhhdjkyryu',
-            'refresh': 'dhy4yeyeyfryfri439934hfhfkkdlk'
-        }
+        assert response.status_code == 204 
 
-        response = api_client.post('/api/v1/auth/token/refresh/', token_data, format='json')
+        old_token = OutstandingToken.objects.get(token=str(refresh))
+
+        response = api_client.post('/api/v1/auth/token/refresh/', {'refresh': str(refresh)}, format='json')
+
         assert response.status_code == 401
 
-    def test_refresh_blacklisted_token(self, api_client):
-        token_data = {
-            "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2NDIwMDU2LCJpYXQiOjE3NzY0MTkxNTcsImp0aSI6ImVmNWIxNjQwMWQyNzRkOWJiYjMxNDk2NjU3MjAxNjlhIiwidXNlcl9pZCI6ImE4Zjk3NDgzLTY0YjctNGIzMy1iMGI3LWZlM2FkNDkxODliYiJ9.vOdyW7XkILQ6ipsw9lIRUhvdEu9mBh3q71-IYKFxwPo",
-            "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3NzAyMzk1NiwiaWF0IjoxNzc2NDE5MTU2LCJqdGkiOiI5OGI2ZTNlN2VjMDU0NTZmYjY4MGFjZGVlMjU0ZTI0OSIsInVzZXJfaWQiOiJhOGY5NzQ4My02NGI3LTRiMzMtYjBiNy1mZTNhZDQ5MTg5YmIifQ.ssNxXRB8eDJhMB7e4fm-kZ0QvQ5XJpipAfcR9VcOkuk"
-        }
+    def test_logout_all_success(self, api_client):
 
-        new_data = {
-            "new_access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzc2NDIwNDMwLCJpYXQiOjE3NzY0MTk1MzAsImp0aSI6IjE0ZjdmMjkwODViZTRhOGQ4MjU1ODVhMWI5ZGM0N2IzIiwidXNlcl9pZCI6ImE4Zjk3NDgzLTY0YjctNGIzMy1iMGI3LWZlM2FkNDkxODliYiJ9.c27D0GliQsU7CFOzhVHgI2pVi0IBFhdF919uaiiCwig",
-            "new_refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc3NzAyMzk1NiwiaWF0IjoxNzc2NDE5MTU2LCJqdGkiOiI5OGI2ZTNlN2VjMDU0NTZmYjY4MGFjZGVlMjU0ZTI0OSIsInVzZXJfaWQiOiJhOGY5NzQ4My02NGI3LTRiMzMtYjBiNy1mZTNhZDQ5MTg5YmIifQ.ssNxXRB8eDJhMB7e4fm-kZ0QvQ5XJpipAfcR9VcOkuk"
-        }
-        response = api_client.post('/api/v1/auth/token/refresh/', token_data, format='json')
-        assert response.status_code == 401 '''
+        user = User.objects.create_user(
+                username= 'johndoe',
+                email="john@example.com",
+                password="Secure123",
+                is_verified=True
+            )
+
+        tokens = OutstandingToken.objects.filter(user=user)
+        refresh = RefreshToken.for_user(user)
+        api_client.force_authenticate(user=user)
+
+        response = api_client.post('/api/v1/auth/logout-all/', {'tokens': str(tokens), 'refresh': str(refresh)}, format='json')
+
+        assert response.status_code == 204

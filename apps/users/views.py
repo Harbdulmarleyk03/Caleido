@@ -1,3 +1,5 @@
+import token
+
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
@@ -7,10 +9,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
+from apps.users.models import BlacklistedToken, OutstandingToken
 
 User = get_user_model()
 auth_service = AuthService()
@@ -58,6 +60,31 @@ class TokenRefreshView(APIView):
         except:
             return Response({'error': 'Invalid/expired token'}, status=status.HTTP_401_UNAUTHORIZED)
 
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [BrowsableAPIRenderer, JSONRenderer]
+
+    def post(self, request):
+        refresh = request.data.get('refresh')
+        if not refresh:
+            return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)    
+        token = RefreshToken(refresh)
+        try: 
+            token.blacklist()
+        except:
+            return Response({'error': 'Failed to blacklist token'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"User logged out successfully"}, status=status.HTTP_204_NO_CONTENT)
+        
+class LogoutAllView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        tokens = OutstandingToken.objects.filter(user=request.user)
+        for token in tokens:
+            BlacklistedToken.objects.get_or_create(token=token)
+        if not tokens:
+            return Response({'error': 'There are no tokens here'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': 'User logged all out successfully'}, status=status.HTTP_204_NO_CONTENT)
 
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
