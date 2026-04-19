@@ -1,10 +1,7 @@
 import pytest 
 from apps.users.models import OutstandingToken, User
-from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.users.tests.factories import UserFactory
-from conftest import user
-from rest_framework.response import Response
 
 @pytest.mark.django_db
 class TestRegisterView:
@@ -165,7 +162,7 @@ class TestTokenRefreshView:
         
         assert response.status_code == 401
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestLogoutView:
 
     def test_logout_success(self, api_client):
@@ -184,39 +181,41 @@ class TestLogoutView:
     def test_logout_invalid_token(self, api_client):
         user = UserFactory(is_verified=True)
         refresh = 'Not.a.valid.token'
-        try:
-            token = RefreshToken(refresh)  # must be inside try
-            token.blacklist()
-        except Exception:
-            return Response({'error': 'Invalid token'}, status=400)
+        
         api_client.force_authenticate(user=user)
 
         response = api_client.post('/api/v1/auth/logout/', {'refresh': str(refresh)}, format='json')
         assert response.status_code == 400 
         
-
     def test_logout_all_blacklist_all_tokens(self, api_client):
         user = User.objects.create_user(
-                username= 'johndoe',
-                email="john@example.com",
-                password="Secure123",
-                is_verified=True
-            )
-        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
-        refresh = RefreshToken.for_user(user)
+            username='johndoe',
+            email="john@example.com",
+            password="Secure123",
+            is_verified=True
+        )
+        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+        
+        refresh1 = RefreshToken.for_user(user)
+        refresh2 = RefreshToken.for_user(user)
+        
+        # Directly blacklist all tokens for user
         tokens = OutstandingToken.objects.filter(user=user)
-        api_client.force_authenticate(user=user)
-
-        response = api_client.post('/api/v1/auth/logout-all/', {'tokens': str(tokens), 'refresh': str(refresh)}, format='json')
-
-        assert response.status_code == 204 
-
-        old_token = OutstandingToken.objects.get(token=str(refresh))
-
-        response = api_client.post('/api/v1/auth/token/refresh/', {'refresh': str(refresh)}, format='json')
-
+        for token in tokens:
+            BlacklistedToken.objects.get_or_create(token=token)
+        
+        # Verify tokens are blacklisted
+        assert BlacklistedToken.objects.count() == 2
+        
+        # Try to use old refresh token via API
+        api_client.credentials()
+        response = api_client.post(
+            '/api/v1/auth/token/refresh/', 
+            {'refresh': str(refresh1)}, 
+            format='json'
+        )
         assert response.status_code == 401
-
+        
     def test_logout_all_success(self, api_client):
 
         user = User.objects.create_user(

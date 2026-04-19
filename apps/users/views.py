@@ -1,4 +1,4 @@
-import token
+from urllib import request
 
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
@@ -12,7 +12,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
-from apps.users.models import BlacklistedToken, OutstandingToken
+from apps.users.models import OutstandingToken
+from rest_framework_simplejwt.tokens import RefreshToken as RefreshTokenObj
 
 User = get_user_model()
 auth_service = AuthService()
@@ -44,7 +45,7 @@ class LoginView(APIView):
 
 class TokenRefreshView(APIView):
     permission_classes = [AllowAny]
-    renderer_classes = [BrowsableAPIRenderer, JSONRenderer]
+    renderer_classes = [JSONRenderer]
 
     def post(self, request):
         refresh_token = request.data.get('refresh')
@@ -62,29 +63,32 @@ class TokenRefreshView(APIView):
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
-    renderer_classes = [BrowsableAPIRenderer, JSONRenderer]
+    renderer_classes = [JSONRenderer]
 
     def post(self, request):
         refresh = request.data.get('refresh')
         if not refresh:
             return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)    
-        token = RefreshToken(refresh)
-        try: 
+        try:
+            token = RefreshToken(refresh)  
             token.blacklist()
-        except:
+        except Exception:
             return Response({'error': 'Failed to blacklist token'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"User logged out successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
         
 class LogoutAllView(APIView):
     permission_classes = [IsAuthenticated]
+        
 
     def post(self, request):
         tokens = OutstandingToken.objects.filter(user=request.user)
-        for token in tokens:
-            BlacklistedToken.objects.get_or_create(token=token)
-        if not tokens:
-            return Response({'error': 'There are no tokens here'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'detail': 'User logged all out successfully'}, status=status.HTTP_204_NO_CONTENT)
+        for outstanding_token in tokens:
+            try:
+                token = RefreshTokenObj(outstanding_token.token)
+                token.blacklist()
+            except Exception:
+                pass
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
