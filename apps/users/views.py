@@ -3,7 +3,7 @@ from urllib import request
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
-from apps.users.serializers import RegisterSerializer, UserProfileSerializer, LoginSerializer
+from apps.users.serializers import RegisterSerializer, UserProfileSerializer, LoginSerializer, ResendVerificationSerializer
 from .services import AuthService
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -14,6 +14,9 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
 from apps.users.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken as RefreshTokenObj
+from .tokens import verify_verification_token
+from django.core.cache import cache
+from .tasks import send_verification_email
 
 User = get_user_model()
 auth_service = AuthService()
@@ -29,6 +32,52 @@ class RegisterView(APIView):
             user = auth_service.register_user(serializer.validated_data)
             return Response({'detail': 'User registered successfully. Please check your email to verify your account.'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        token = request.query_params.get('token')
+        user_id = verify_verification_token(token)
+        user = User.objects.get(id = user_id)
+        user.is_verified = True 
+        user.save()
+        if not token:
+            return Response({'error': 'Token is missing, expired or invalid'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'detail': 'Email Verified successfully'}, status=status.HTTP_200_OK)
+
+class ResendVerificationEmailView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = ResendVerificationSerializer
+    COOLDOWN_SECONDS = 60
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data["email"].lower().strip()
+        cache_key = f"resend_verification_{email}"
+
+        # Cooldown check
+        if cache.get(cache_key):
+            return Response({"detail": "Please wait before requesting another verification email."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Set cooldown anyway to prevent probing
+            cache.set(cache_key, True, timeout=self.COOLDOWN_SECONDS)
+            return Response({"detail": "If an account exists, a verification email has been sent."}, status=status.HTTP_200_OK)
+
+        if user.is_verified:
+            # Still set cooldown to avoid spam
+            cache.set(cache_key, True, timeout=self.COOLDOWN_SECONDS)
+            return Response({"detail": "If an account exists, a verification email has been sent."}, status=status.HTTP_200_OK)
+        send_verification_email.delay(user.id)
+        # Set cooldown
+        cache.set(cache_key, True, timeout=self.COOLDOWN_SECONDS)
+        return Response({"detail": "If an account exists, a verification email has been sent."}, status=status.HTTP_200_OK)        
+    
 
 class LoginView(APIView):
     serializer_class = LoginSerializer

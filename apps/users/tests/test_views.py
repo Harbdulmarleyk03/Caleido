@@ -2,6 +2,7 @@ import pytest
 from apps.users.models import OutstandingToken, User
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.users.tests.factories import UserFactory
+from apps.users.tokens import generate_verification_token, verify_verification_token 
 
 @pytest.mark.django_db
 class TestRegisterView:
@@ -232,3 +233,55 @@ class TestLogoutView:
         response = api_client.post('/api/v1/auth/logout-all/', {'tokens': str(tokens), 'refresh': str(refresh)}, format='json')
 
         assert response.status_code == 204
+
+@pytest.mark.django_db
+class TestEmailVerificationView:
+
+    def test_verify_email_success(self, api_client):
+        user = User.objects.get(email=self.email)
+        token = generate_verification_token(user)
+
+        response = api_client.get('/api/v1/auth/verify-email/', {'token': str(token)}, format='json')
+
+        assert user.is_verified == True 
+        assert response.status_code == 200
+
+    def test_verify_email_invalid_token(self, api_client):
+        token = "not.valid.token"
+
+        response = api_client.get('/api/v1/auth/verify-email/', {'token': str(token)}, format='json')
+
+        assert response.status_code == 400 
+
+    def test_verify_email_expired_token(self, api_client):
+        user = User.objects.get(email=self.email)
+        token = generate_verification_token(user)
+        expired_token = verify_verification_token(token, max_age=0)
+
+        response = api_client.get('/api/v1/auth/verify-email/', {'expired_token': str(expired_token)}, format='json')
+
+        assert response.status_code == 400
+
+    def test_resend_verification_success(self, api_client):
+        user = User.objects.get(email=self.email)
+        user.is_verified = False
+
+        response = api_client.post('/api/v1/auth/verify-email/', {'unverified_email': user.email}, format='json')
+        assert response.status_code == 200
+
+
+    def test_resend_verification_cooldown(self, api_client):
+        user = User.objects.get(email=self.email)
+
+        response = api_client.post('/api/v1/auth/verify-email/', {user.email, user.email}, format='json')
+
+        assert response.status_code == 429
+ 
+
+    def test_resend_already_verified(self, api_client):
+        user = User.objects.get(email=self.email)
+        user.is_verified = True
+
+        response = api_client.post('/api/v1/auth/verify-email/', {'verified_email': user.email}, format='json')
+        assert response.status_code == 200
+ 

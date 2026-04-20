@@ -7,4 +7,6 @@ urlpatterns = [
     path('token/refresh/', views.TokenRefreshView.as_view(), name='token-refresh'),
     path('logout/', views.LogoutView.as_view(), name='logout'),
     path('logout-all/', views.LogoutAllView.as_view(), name='logout-all'),
+    path('verify-email/', views.VerifyEmailView.as_view(), name='verify-email'),
+    path('verify-email/resend/', views.ResendVerificationEmailView.as_view(), name='verify-email-resend'),
 ]
