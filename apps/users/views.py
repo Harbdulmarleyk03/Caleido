@@ -1,3 +1,4 @@
+import token
 from urllib import request
 
 from rest_framework.generics import RetrieveUpdateAPIView
@@ -38,12 +39,14 @@ class VerifyEmailView(APIView):
 
     def get(self, request):
         token = request.query_params.get('token')
-        user_id = verify_verification_token(token)
-        user = User.objects.get(id = user_id)
-        user.is_verified = True 
-        user.save()
         if not token:
             return Response({'error': 'Token is missing, expired or invalid'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = verify_verification_token(token)
+            user.is_verified = True 
+            user.save()
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'detail': 'Email Verified successfully'}, status=status.HTTP_200_OK)
 
 class ResendVerificationEmailView(APIView):

@@ -189,6 +189,8 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+DOMAIN = env('DOMAIN', default='http://localhost:8000')
+
 def validate_settings():
     required = [
         'SECRET_KEY',
