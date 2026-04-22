@@ -1,6 +1,3 @@
-import token
-from urllib import request
-
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
@@ -80,7 +77,6 @@ class ResendVerificationEmailView(APIView):
         # Set cooldown
         cache.set(cache_key, True, timeout=self.COOLDOWN_SECONDS)
         return Response({"detail": "If an account exists, a verification email has been sent."}, status=status.HTTP_200_OK)        
-    
 
 class LoginView(APIView):
     serializer_class = LoginSerializer
@@ -101,7 +97,6 @@ class TokenRefreshView(APIView):
 
     def post(self, request):
         refresh_token = request.data.get('refresh')
-
         if not refresh_token:
             raise AuthenticationFailed("Refresh token is required")
         try:
@@ -129,8 +124,7 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
         
 class LogoutAllView(APIView):
-    permission_classes = [IsAuthenticated]
-        
+    permission_classes = [IsAuthenticated]       
 
     def post(self, request):
         tokens = OutstandingToken.objects.filter(user=request.user)
@@ -141,6 +135,16 @@ class LogoutAllView(APIView):
             except Exception:
                 pass
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class PasswordResetRequestView(APIView):
+
+    def post(self, request):
+        pass
+
+class PasswordResetConfirmView(APIView):
+
+    def post(self, request):
+        pass
 
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer

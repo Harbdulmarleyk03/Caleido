@@ -10,7 +10,7 @@ class AuthService:
     def register_user(self, validated_data):
         validated_data.pop("password2", None)
         password = validated_data.pop("password")
-        user = self.user_model.objects.create_user(password=password,is_active=True, is_verified=False, **validated_data)
+        user = self.user_model.objects.create_user(password=password, is_active=True, is_verified=False, **validated_data)
         send_verification_email.delay(str(user.id))        
         return user
     
