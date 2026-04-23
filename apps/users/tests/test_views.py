@@ -1,8 +1,8 @@
 import pytest 
-from apps.users.models import OutstandingToken, User
+from apps.users.models import BlacklistedToken, OutstandingToken, User
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.users.tests.factories import UserFactory
-from apps.users.tokens import generate_verification_token, verify_verification_token 
+from apps.users.tokens import generate_password_reset_token, generate_verification_token
 from unittest.mock import patch
 from django.core.signing import SignatureExpired
 
@@ -277,11 +277,111 @@ class TestEmailVerificationView:
         api_client.post('/api/v1/auth/verify-email/resend/', {'email': user.email}, format='json')
         response = api_client.post('/api/v1/auth/verify-email/resend/', {'email': user.email}, format='json')
         assert response.status_code == 429
-        
-        
+                
     def test_resend_already_verified(self, api_client):
         user = UserFactory(is_verified=True)
 
         response = api_client.post('/api/v1/auth/verify-email/resend/', {'email': user.email}, format='json')
         assert response.status_code == 200
- 
+
+
+@pytest.mark.django_db(transaction=True) 
+class TestPasswordResetView:
+
+    def test_password_reset_request_success(self, api_client):
+        user = UserFactory(is_verified=True)
+            
+        response = api_client.post('/api/v1/auth/password-reset/', {'email': user.email}, format='json')
+        assert response.status_code == 200
+
+    def test_password_reset_request_nonexistent_email(self, api_client):
+        user = UserFactory(is_verified=False)
+
+        response = api_client.post('/api/v1/auth/password-reset/', {'email': user.email}, format='json')
+        assert response.status_code == 200
+
+    def test_password_reset_confirm_success(self, api_client):
+        user = UserFactory(is_verified=False)
+        token = generate_password_reset_token(user)
+        new_password = "Secure123"
+
+        response = api_client.post('/api/v1/auth/password-reset/confirm/', {'token': token, 'new_password': new_password}, format='json')
+        user.refresh_from_db()
+        assert user.check_password(new_password)  
+        assert response.status_code == 200
+      
+    def test_password_reset_confirm_invalid_token(self, api_client):
+        token = "not.valid.token"
+
+        response = api_client.post('/api/v1/auth/password-reset/confirm/', {'token': str(token)}, format='json')
+
+        assert response.status_code == 400 
+
+    def test_password_reset_confirm_expired_token(self, api_client):
+        user = UserFactory(is_verified=False)
+        token = generate_password_reset_token(user)
+
+        with patch('apps.users.tokens.signing.loads', side_effect=SignatureExpired):
+            response = api_client.post('/api/v1/auth/password-reset/confirm/', {'token': token}, format='json')
+        assert response.status_code == 400
+
+    def test_password_reset_invalidates_sessions(self, api_client):
+        user = User.objects.create_user(
+            username='johndoe',
+            email="john@example.com",
+            password="Secure123",
+            is_verified=True
+        )    
+
+        token = generate_password_reset_token(user)
+        
+        response = api_client.post('/api/v1/auth/password-reset/confirm/', {'token': token, 'new_password': 'NewSecure456'}, format='json')
+        assert response.status_code == 200
+        
+        # Verify password was changed
+        user.refresh_from_db()
+        assert not user.check_password('Secure123')  # old password no longer works
+        assert user.check_password('NewSecure456')   # new password works
+
+    def test_change_password_success(self, api_client):
+        user = User.objects.create_user(
+            username='johndoe',
+            email="john@example.com",
+            password="Secure123",
+            is_verified=True
+        )
+          
+        data = {
+            'username': 'johndoe',
+            "email": "john@example.com",
+            "password": "Secure123",
+        }
+
+        old_password = data['password']
+        new_password = "NewSecure456"
+
+        api_client.force_authenticate(user=user)
+
+
+        response = api_client.patch('/api/v1/users/me/password/', {'old_password': 'Secure123', 'new_password': 'NewSecure456'}, format='json')        
+        assert response.status_code == 200
+
+    
+    def test_change_password_wrong_old_password(self, api_client):
+        user = User.objects.create_user(
+            username='johndoe',
+            email="john@example.com",
+            password="Secure123",
+            is_verified=True
+        )
+        data = {
+            'username': 'johndoe',
+            "email": "john@example.com",
+            "password": "Secure123",
+        }
+
+        api_client.force_authenticate(user=user)
+
+        response = api_client.patch('/api/v1/users/me/password/', {'old_password': 'WrongPassword1', 'new_password': 'NewSecure456'}, format='json')
+        
+        assert response.status_code == 400

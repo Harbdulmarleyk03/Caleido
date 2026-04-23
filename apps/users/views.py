@@ -1,7 +1,9 @@
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
-from apps.users.serializers import RegisterSerializer, UserProfileSerializer, LoginSerializer, ResendVerificationSerializer
+from apps.users.serializers import (RegisterSerializer, UserProfileSerializer, LoginSerializer, 
+        ResendVerificationSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer,
+        ChangePasswordSerializer)
 from .services import AuthService
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -12,9 +14,9 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer
 from apps.users.models import OutstandingToken
 from rest_framework_simplejwt.tokens import RefreshToken as RefreshTokenObj
-from .tokens import verify_verification_token
+from .tokens import verify_verification_token, verify_password_reset_token
 from django.core.cache import cache
-from .tasks import send_verification_email
+from .tasks import send_verification_email, send_password_reset_email
 
 User = get_user_model()
 auth_service = AuthService()
@@ -137,14 +139,55 @@ class LogoutAllView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetRequestSerializer
 
     def post(self, request):
-        pass
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"].lower().strip()
+        try:
+            user = User.objects.get(email=email)
+            send_password_reset_email.delay(str(user.id))
+        except User.DoesNotExist:
+            pass  # silent — no enumeration
+        return Response(status=status.HTTP_200_OK)
 
 class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+    serializer_class = PasswordResetConfirmSerializer
 
     def post(self, request):
-        pass
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        token = serializer.validated_data["token"]
+        new_password = serializer.validated_data["new_password"]
+        try:
+            user = verify_password_reset_token(token)
+            user.set_password(new_password)
+            user.save()
+            tokens = OutstandingToken.objects.filter(user=user)
+            for outstanding_token in tokens:
+                try:
+                    RefreshTokenObj(outstanding_token.token).blacklist()
+                except Exception:
+                    pass
+            return Response(status=status.HTTP_200_OK)
+        except Exception:
+            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ChangePasswordSerializer
+
+    def patch(self, request):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        new_password = serializer.validated_data["new_password"]
+        user = request.user
+        user.set_password(new_password)
+        user.save()
+        return Response({'detail': 'Password changed successfully'}, status=status.HTTP_200_OK)
 
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
