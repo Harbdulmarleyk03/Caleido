@@ -191,6 +191,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 DOMAIN = env('DOMAIN', default='http://localhost:8000')
 
+
+GOOGLE_CLIENT_ID=env('GOOGLE_CLIENT_ID', default='your-google-client-id')
+GOOGLE_CLIENT_SECRET=env('GOOGLE_CLIENT_SECRET', default='your-google-client-secret')
+GOOGLE_REDIRECT_URI=env('GOOGLE_REDIRECT_URI', default='http://localhost:8000/api/auth/google/callback')
+
 def validate_settings():
     required = [
         'SECRET_KEY',

@@ -21,3 +21,6 @@ class AuthService:
         if not user.is_verified:
             raise PermissionDenied("Please verify your email")  
         return user
+    
+    def oauth_upsert_user(user_info):
+        pass
