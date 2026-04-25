@@ -11,4 +11,6 @@ urlpatterns = [
     path('verify-email/resend/', views.ResendVerificationEmailView.as_view(), name='verify-email-resend'),
     path('password-reset/confirm/', views.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('password-reset/', views.PasswordResetRequestView.as_view(), name='password-reset'),
+    path('google/', views.GoogleOAuthRedirectView.as_view(), name='google'),
+    path('google/callback/', views.GoogleOAuthCallbackView.as_view(), name='google-callback'),
 ]

@@ -385,3 +385,58 @@ class TestPasswordResetView:
         response = api_client.patch('/api/v1/users/me/password/', {'old_password': 'WrongPassword1', 'new_password': 'NewSecure456'}, format='json')
         
         assert response.status_code == 400
+
+@pytest.mark.django_db
+class TestGoogleOAuthView:
+
+    def test_google_redirect_returns_url(self, api_client):
+        response = api_client.get('/api/v1/auth/google/', format='json')
+
+        assert response.status_code == 200
+        assert "url" in response.data
+        assert "accounts.google.com" in response.data["url"]
+        
+    @patch("apps.users.views.get_user_info")
+    @patch("apps.users.views.exchange_code_for_tokens")
+    def test_google_callback_new_user(self, mock_exchange, mock_user_info, api_client):
+        mock_exchange.return_value = {"access_token": "fake_access_token"}
+        mock_user_info.return_value = {
+            "email": "testuser@gmail.com",
+            "given_name": "Test",
+            "family_name": "User",
+            "sub": "google-123"
+        }
+        response = api_client.get(
+            '/api/v1/auth/google/callback/?code=fakecode',
+            format='json'
+        )
+
+        assert response.status_code == 200
+        assert "access" in response.data
+        assert "refresh" in response.data
+
+        assert User.objects.filter(email="testuser@gmail.com").exists()
+
+    @patch("apps.users.views.get_user_info")
+    @patch("apps.users.views.exchange_code_for_tokens")
+    def test_google_callback_new_user(self, mock_exchange, mock_user_info, api_client):
+        mock_exchange.return_value = {"access_token": "fake_access_token"}
+        mock_user_info.return_value = {
+            "email": "testuser@gmail.com",
+            "given_name": "Test",
+            "family_name": "User",
+            "sub": "google-123"
+        }
+        User.objects.create_user(
+            email="existing@gmail.com",
+            username="existinguser"
+        )
+        response = api_client.get('/api/v1/auth/google/callback/?code=fakecode', format='json')
+        assert response.status_code == 200
+        assert User.objects.filter(email="existing@gmail.com").count() == 1
+
+    def test_google_callback_no_code(self, api_client):
+        response = api_client.get('/api/v1/auth/google/callback/', format='json')
+
+        assert response.status_code == 400
+        assert "error" in response.data

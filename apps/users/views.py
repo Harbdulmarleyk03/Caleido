@@ -17,6 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken as RefreshTokenObj
 from .tokens import verify_verification_token, verify_password_reset_token
 from django.core.cache import cache
 from .tasks import send_verification_email, send_password_reset_email
+from .google_client import exchange_code_for_tokens, get_google_auth_url, get_user_info
 
 User = get_user_model()
 auth_service = AuthService()
@@ -188,6 +189,32 @@ class ChangePasswordView(APIView):
         user.set_password(new_password)
         user.save()
         return Response({'detail': 'Password changed successfully'}, status=status.HTTP_200_OK)
+
+class GoogleOAuthRedirectView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        url, state = get_google_auth_url()
+        return Response({'url': url}, status=status.HTTP_200_OK)
+    
+class GoogleOAuthCallbackView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        code = request.query_params.get('code')
+        if not code:
+            return Response({'error': 'Authorization code is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            tokens = exchange_code_for_tokens(code)
+            google_user_info = get_user_info(tokens['access_token'])
+            user = auth_service.oauth_upsert_user(google_user_info)
+            refresh = RefreshToken.for_user(user)
+            access = refresh.access_token
+            return Response({'access': str(access), 'refresh': str(refresh)}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print(f"OAuth error: {e}")
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        #    return Response({'error': 'Invalid authorization code'}, status=status.HTTP_400_BAD_REQUEST)    
 
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
