@@ -6,6 +6,8 @@ from apps.users.tokens import generate_password_reset_token, generate_verificati
 from unittest.mock import patch
 from django.core.signing import SignatureExpired
 
+from conftest import user
+
 @pytest.mark.django_db
 class TestRegisterView:
     
@@ -440,3 +442,51 @@ class TestGoogleOAuthView:
 
         assert response.status_code == 400
         assert "error" in response.data
+
+@pytest.mark.django_db
+class TestUserProfileView:
+
+    def test_get_profile_success(self, api_client):
+        user = UserFactory(is_verified=True)
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get('/api/v1/users/me/', format='json')
+
+        assert response.status_code == 200 
+        assert "username" in response.data
+        assert "first_name" in response.data
+        assert "timezone" in response.data
+
+
+    def test_get_profile_unauthenticated(self, api_client):
+        response = api_client.get('/api/v1/users/me/', format='json')
+
+        assert response.status_code == 401
+
+    def test_update_profile_success(self, api_client):
+        user = UserFactory(is_verified=True)
+        api_client.force_authenticate(user=user)
+        response = api_client.patch('/api/v1/users/me/', {'first_name': 'Updated'}, format='json')
+        user.refresh_from_db()
+        assert user.first_name == 'Updated'
+        assert response.status_code == 200
+
+    def test_update_profile_invalid_timezone(self, api_client):
+        user = UserFactory(is_verified=True)
+        api_client.force_authenticate(user=user)
+        response = api_client.patch('/api/v1/users/me/', {'timezone': 'Africa'}, format='json')
+
+        assert response.status_code == 400
+
+    def test_update_profile_email_is_readonly(self, api_client):
+        user = UserFactory(is_verified=True)
+        original_email = user.email
+        api_client.force_authenticate(user=user)
+        response = api_client.patch('/api/v1/users/me/', {'email': 'newemail@example.com'}, format='json')
+        user.refresh_from_db()
+        assert user.email == original_email  
+        assert response.status_code == 200
+
+    def test_update_profile_unauthenticated(self, api_client):
+        response = api_client.patch('/api/v1/users/me/', format='json')
+        assert response.status_code == 401        

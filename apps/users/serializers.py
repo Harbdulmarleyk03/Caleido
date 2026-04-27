@@ -55,11 +55,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'email', 'first_name', 'last_name', 'full_name', 'username', 'timezone', 'locale', 'avatar_url',
-            'is_verified', 'created_at',]
-        read_only_fields = [ 'id', 'email', 'is_verified', 'created_at', 'full_name',]
+            'is_verified', 'date_joined',]
+        read_only_fields = [ 'id', 'email', 'is_verified', 'date_joined', 'full_name',]
 
     def get_full_name(self, obj):
-        return obj.full_name
+        return obj.get_full_name()
 
 
 class ChangePasswordSerializer(serializers.Serializer):
