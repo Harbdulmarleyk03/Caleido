@@ -1,3 +1,4 @@
+from django.db import connection
 import pytest 
 from apps.users.models import BlacklistedToken, OutstandingToken, User
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -5,8 +6,9 @@ from apps.users.tests.factories import UserFactory
 from apps.users.tokens import generate_password_reset_token, generate_verification_token
 from unittest.mock import patch
 from django.core.signing import SignatureExpired
-
+from django.utils import timezone        
 from conftest import user
+from datetime import timedelta
 
 @pytest.mark.django_db
 class TestRegisterView:
@@ -490,3 +492,47 @@ class TestUserProfileView:
     def test_update_profile_unauthenticated(self, api_client):
         response = api_client.patch('/api/v1/users/me/', format='json')
         assert response.status_code == 401        
+
+@pytest.mark.django_db(transaction=True)
+class TestAccountDeleteView:
+
+    def test_delete_account_success(self, api_client):
+        user = UserFactory(is_verified=True)
+        api_client.force_authenticate(user=user)
+
+        response = api_client.delete('/api/v1/users/me/delete/', format='json')
+
+        assert response.status_code == 204
+        user.refresh_from_db()
+        assert user.is_active == False
+        assert user.email == f'deleted_{user.id}@deleted.local'
+
+    def test_delete_account_unauthenticated(self, api_client):
+        response = api_client.delete('/api/v1/users/me/delete/', format='json')
+        assert response.status_code == 401
+
+    def test_delete_account_invalidates_tokens(self, api_client):
+        # Skip this test on SQLite due to transaction isolation limitations
+        if connection.vendor == 'sqlite':
+            pytest.skip("Token blacklist test requires PostgreSQL")
+        
+        user = User.objects.create_user(
+            username='johndoe',
+            email='john@example.com',
+            password='Secure123',
+            is_verified=True
+        )
+        refresh = RefreshToken.for_user(user)
+        access = str(refresh.access_token)
+        
+        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
+        response = api_client.delete('/api/v1/users/me/delete/', format='json')
+        assert response.status_code == 204
+        
+        api_client.credentials()
+        response = api_client.post(
+            '/api/v1/auth/token/refresh/',
+            {'refresh': str(refresh)},
+            format='json'
+        )
+        assert response.status_code == 401

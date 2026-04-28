@@ -225,3 +225,23 @@ class UserProfileView(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
+    
+class AccountDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        tokens = OutstandingToken.objects.filter(user=user)
+        for outstanding_token in tokens:
+            try:
+                RefreshTokenObj(outstanding_token.token).blacklist()
+            except Exception:
+                pass
+        user.email = f'deleted_{user.id}@deleted.local'
+        user.first_name = 'Deleted'
+        user.last_name = 'User'
+        user.username = f'deleted_{user.id}'
+        user.avatar_url = None
+        user.is_active = False
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)

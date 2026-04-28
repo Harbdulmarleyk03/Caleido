@@ -4,14 +4,13 @@ DEBUG = False
 SECRET_KEY = "test-secret-key"  # nosec
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
-        "TEST": {
-            "NAME": ":memory:",   # explicit, keeps it clear
-        },
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'test_db.sqlite3',
     }
 }
+
+MIGRATION_MODULES = {}  # use real migrations, not mocked ones
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
