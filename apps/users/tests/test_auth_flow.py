@@ -3,8 +3,6 @@ from apps.users.tokens import generate_verification_token
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 
-from conftest import user
-
 User = get_user_model()
 
 @pytest.mark.django_db 
@@ -30,13 +28,15 @@ class TestAuthE2EFlow:
         access = login_response.data['access']
         refresh = login_response.data['refresh']
        
-        refresh = RefreshToken.for_user(user)
-
         token_refresh_response = api_client.post('/api/v1/auth/token/refresh/', {'refresh': str(refresh)})
 
         assert token_refresh_response.status_code == 200 
 
         api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-        logout_response = api_client.post('/api/v1/auth/logout', {'refresh': refresh})
+        logout_response = api_client.post('/api/v1/auth/logout/', {'refresh': str(refresh)})
 
-        assert logout_r
+        assert logout_response.status_code == 204 
+
+        token_refresh_response = api_client.post('/api/v1/auth/token/refresh/', {'refresh': str(refresh)})
+
+        assert token_refresh_response.status_code == 401
