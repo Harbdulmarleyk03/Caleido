@@ -214,7 +214,6 @@ class GoogleOAuthCallbackView(APIView):
         except Exception as e:
             print(f"OAuth error: {e}")
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        #    return Response({'error': 'Invalid authorization code'}, status=status.HTTP_400_BAD_REQUEST)    
 
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer

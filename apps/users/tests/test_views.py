@@ -530,9 +530,5 @@ class TestAccountDeleteView:
         assert response.status_code == 204
         
         api_client.credentials()
-        response = api_client.post(
-            '/api/v1/auth/token/refresh/',
-            {'refresh': str(refresh)},
-            format='json'
-        )
+        response = api_client.post('/api/v1/auth/token/refresh/', {'refresh': str(refresh)}, format='json')
         assert response.status_code == 401
