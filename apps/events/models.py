@@ -1,6 +1,7 @@
-from django.db import models
+from django.db import IntegrityError, models, transaction
 from common.models import AbstractBaseModel
 from apps.users.models import User
+from apps.events.services.slug_services import SlugService
 
 class EventType(AbstractBaseModel):
     LOCATION_CHOICES = [
@@ -45,7 +46,18 @@ class EventType(AbstractBaseModel):
 
     def __str__(self):
         return f"{self.title} ({self.owner.email})"
-    
+
+    def save(self, *args, **kwargs):
+        if not self.slug:  # only generate if empty
+            self.slug = SlugService.generate_unique_slug(EventType, self.title)
+        try:
+            with transaction.atomic():
+                super().save(*args, **kwargs)
+        except IntegrityError:
+        # regenerate and retry once
+            self.slug = SlugService.generate_unique_slug(EventType, self.title)
+        super().save(*args, **kwargs)
+
 class AvailabilityRule(AbstractBaseModel):
     event_type = models.ForeignKey(EventType, on_delete=models.CASCADE, related_name="availability_rules", db_index=True)
     day_of_week = models.SmallIntegerField()  # 0=Monday, 6=Sunday
