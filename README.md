@@ -12,8 +12,8 @@ Currently in active development — Week 3 of a 12-week build.
 | Phase | Status |
 |---|---|
 | Week 1-2: Foundation and Infrastructure | Done |
-| Week 3-4: Authentication and User Management | In Progress |
-| Week 5-6: Event Types and Booking Engine | Upcoming |
+| Week 3-4: Authentication and User Management | Done |
+| Week 5-6: Event Types and Booking Engine | In Progress |
 | Week 7-8: Notifications and Calendar Integration | Upcoming |
 | Week 9-10: Advanced Features and Payments | Upcoming |
 | Week 11-12: Performance and Deployment | Upcoming |
