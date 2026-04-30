@@ -45,7 +45,7 @@ class EventType(AbstractBaseModel):
 
     def __str__(self):
         return f"{self.title} ({self.owner.email})"
-
+    
 class AvailabilityRule(AbstractBaseModel):
     event_type = models.ForeignKey(EventType, on_delete=models.CASCADE, related_name="availability_rules", db_index=True)
     day_of_week = models.SmallIntegerField()  # 0=Monday, 6=Sunday

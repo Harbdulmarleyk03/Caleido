@@ -1,3 +1,7 @@
 from django.contrib import admin
+from apps.events.models import EventType, AvailabilityRule, DateOverride, EventTypeQuestion
 
-# Register your models here.
+admin.site.register(EventType)
+admin.site.register(AvailabilityRule)
+admin.site.register(DateOverride)
+admin.site.register(EventTypeQuestion)
