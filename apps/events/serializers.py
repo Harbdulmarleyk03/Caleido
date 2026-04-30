@@ -9,19 +9,19 @@ class EventTypeSerializer(serializers.ModelSerializer):
 class EventTypeDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventType 
-        fields = ['owner', 'title', 'team', 'description', 'duration_minutes', 'location_time', 
+        fields = ['owner', 'title', 'team', 'description', 'duration_minutes', 'location_type', 
                   'location_value', 'assignment_rule', 'buffer_before_min', 'buffer_after_min', 
                   'min_notice_hours', 'max_future_days']
 
 class EventTypeUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventType 
-        fields = ['owner', 'title', 'team', 'description', 'duration_minutes', 'location_time', 
+        fields = ['title', 'team', 'description', 'duration_minutes', 'location_type', 
                   'location_value', 'assignment_rule', 'buffer_before_min', 'buffer_after_min', 
                   'min_notice_hours', 'max_future_days']
             
 class EventTypeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventType 
-        fields = ['owner', 'title', 'team', 'duration_minutes', 'location_time']
+        fields = ['owner', 'title', 'team', 'duration_minutes', 'location_type']
 
