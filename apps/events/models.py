@@ -55,8 +55,9 @@ class EventType(AbstractBaseModel):
                 super().save(*args, **kwargs)
         except IntegrityError:
         # regenerate and retry once
-            self.slug = SlugService.generate_unique_slug(EventType, self.title)
-            super().save(*args, **kwargs)
+            with transaction.atomic():
+                self.slug = SlugService.generate_unique_slug(EventType, self.title)
+                super().save(*args, **kwargs)
 
 class AvailabilityRule(AbstractBaseModel):
     event_type = models.ForeignKey(EventType, on_delete=models.CASCADE, related_name="availability_rules", db_index=True)

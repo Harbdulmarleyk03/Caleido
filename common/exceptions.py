@@ -259,4 +259,4 @@ class AppError(APIException):
     """
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = 'An application error occurred.'
-    default_code = 'app_error'
+    default_code = 'app_error' 

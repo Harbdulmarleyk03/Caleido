@@ -5,6 +5,7 @@ class EventTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventType 
         fields = "__all__"
+        read_only_fields = ['owner', 'slug', 'created_at', 'updated_at']
 
 class EventTypeDetailSerializer(serializers.ModelSerializer):
     class Meta:

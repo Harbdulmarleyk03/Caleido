@@ -13,10 +13,10 @@ class EventTypeViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
    
-        if self.action in ['list', 'create', 'retrieve']:
+        if self.action in ['list', 'create']:
             permission_classes = [IsAuthenticated]
         else:
-            permission_classes = [IsEventTypeOwner]
+            permission_classes = [IsAuthenticated, IsEventTypeOwner]
         return [permission() for permission in permission_classes]
 
     def get_serializer_class(self, *args, **kwargs):
@@ -37,6 +37,9 @@ class EventTypeViewSet(viewsets.ModelViewSet):
             serializer_class = EventTypeUpdateSerializer
             return serializer_class 
     
+        return EventTypeSerializer
+    
+    
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -52,19 +55,22 @@ class EventTypeViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None):
         queryset = EventType.objects.select_related('owner').all()
         event_type = get_object_or_404(queryset, pk=pk)
+        self.check_object_permissions(request, event_type)
         serializer = self.get_serializer(event_type)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
     def update(self, request, pk=None):
         queryset = EventType.objects.select_related('owner').all()
         event_type = get_object_or_404(queryset, pk=pk)
+        self.check_object_permissions(request, event_type)
         serializer = self.get_serializer(event_type, data=request.data)
         if serializer.is_valid(raise_exception=True):
-            serializer.save(owner=request.user)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, pk=None):
         event_type = get_object_or_404(EventType, pk=pk)
+        self.check_object_permissions(request, event_type)
         event_type.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
