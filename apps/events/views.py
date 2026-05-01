@@ -37,8 +37,7 @@ class EventTypeViewSet(viewsets.ModelViewSet):
             serializer_class = EventTypeUpdateSerializer
             return serializer_class 
     
-        return EventTypeSerializer
-    
+        return EventTypeSerializer    
     
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
@@ -49,6 +48,9 @@ class EventTypeViewSet(viewsets.ModelViewSet):
     
     def list(self, request):
         queryset = EventType.objects.filter(owner=request.user)
+        is_active = request.query_params.get('is_active')
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active.lower() == 'true')
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
