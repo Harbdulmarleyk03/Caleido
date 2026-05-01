@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.events.permissions import IsEventTypeOwner
 
 class EventTypeViewSet(viewsets.ModelViewSet):
-    renderer_classes = [BrowsableAPIRenderer, JSONRenderer]
+    renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
 
     def get_permissions(self):
    
@@ -38,6 +38,9 @@ class EventTypeViewSet(viewsets.ModelViewSet):
             return serializer_class 
         return EventTypeSerializer    
     
+    def get_queryset(self):
+        return EventType.objects.filter(owner=self.request.user)
+    
     def create(self, request):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid(raise_exception=True):
@@ -46,7 +49,7 @@ class EventTypeViewSet(viewsets.ModelViewSet):
         return Response(status=status.HTTP_400_BAD_REQUEST)
     
     def list(self, request):
-        queryset = EventType.objects.filter(owner=request.user)
+        queryset = self.get_queryset()
         is_active = request.query_params.get('is_active')
         if is_active is not None:
             queryset = queryset.filter(is_active=is_active.lower() == 'true')
@@ -60,11 +63,12 @@ class EventTypeViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(event_type)
         return Response(serializer.data, status=status.HTTP_200_OK)
         
-    def update(self, request, pk=None):
+    def update(self, request, pk=None, **kwargs):
+        partial = kwargs.pop('partial', False)  # captures partial=True from PATCH
         queryset = EventType.objects.select_related('owner').all()
         event_type = get_object_or_404(queryset, pk=pk)
         self.check_object_permissions(request, event_type)
-        serializer = self.get_serializer(event_type, data=request.data)
+        serializer = self.get_serializer(event_type, data=request.data, partial=partial)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

@@ -24,5 +24,5 @@ class EventTypeUpdateSerializer(serializers.ModelSerializer):
 class EventTypeListSerializer(serializers.ModelSerializer):
     class Meta:
         model = EventType 
-        fields = ['owner', 'title', 'team', 'duration_minutes', 'location_type']
+        fields = ['id', 'is_active', 'owner', 'title', 'team', 'duration_minutes', 'location_type']
 

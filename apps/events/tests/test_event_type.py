@@ -32,7 +32,6 @@ def auth_client(api_client, owner):
     api_client.force_authenticate(user=owner)
     return api_client
 
-
 @pytest.mark.django_db
 class TestEventTypeViewSet:
 
