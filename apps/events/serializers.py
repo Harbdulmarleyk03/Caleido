@@ -1,4 +1,4 @@
-from apps.events.models import EventType
+from apps.events.models import EventType, AvailabilityRule
 from rest_framework import serializers 
 
 class EventTypeSerializer(serializers.ModelSerializer):
@@ -26,3 +26,7 @@ class EventTypeListSerializer(serializers.ModelSerializer):
         model = EventType 
         fields = ['id', 'is_active', 'owner', 'title', 'team', 'duration_minutes', 'location_type']
 
+class AvailabilityRuleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AvailabilityRule
+        fields = ['event_type', 'day_of_week', 'start_time', 'end_time']

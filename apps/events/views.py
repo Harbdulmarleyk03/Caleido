@@ -2,11 +2,12 @@ from apps.events.models import EventType
 from rest_framework import viewsets, status  
 from rest_framework.response import Response 
 from apps.events.serializers import (EventTypeSerializer, EventTypeListSerializer, 
-                                     EventTypeDetailSerializer, EventTypeUpdateSerializer)
+            EventTypeDetailSerializer, EventTypeUpdateSerializer, AvailabilityRuleSerializer)
 from django.shortcuts import get_object_or_404
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 from rest_framework.permissions import IsAuthenticated
 from apps.events.permissions import IsEventTypeOwner
+from rest_framework.views import APIView
 
 class EventTypeViewSet(viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
@@ -79,3 +80,14 @@ class EventTypeViewSet(viewsets.ModelViewSet):
         self.check_object_permissions(request, event_type)
         event_type.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+class AvailabilityScheduleView(APIView):
+    permission_classes = [IsAuthenticated, IsEventTypeOwner]
+    serializer_class = AvailabilityRuleSerializer 
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
