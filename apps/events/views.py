@@ -36,7 +36,6 @@ class EventTypeViewSet(viewsets.ModelViewSet):
         elif self.action in ["update", "partial_update"]:
             serializer_class = EventTypeUpdateSerializer
             return serializer_class 
-    
         return EventTypeSerializer    
     
     def create(self, request):
