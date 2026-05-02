@@ -1,7 +1,7 @@
 from django.db import IntegrityError, models, transaction
 from common.models import AbstractBaseModel
 from apps.users.models import User
-from apps.events.services.slug_services import SlugService
+from apps.events.services.slug_service import SlugService
 
 class EventType(AbstractBaseModel):
     LOCATION_CHOICES = [
