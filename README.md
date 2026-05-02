@@ -7,7 +7,7 @@ and Stripe payment processing.
 
 ## Project Status
 
-Currently in active development — Week 3 of a 12-week build.
+Currently in active development — Week 5 of a 12-week build.
 
 | Phase | Status |
 |---|---|
