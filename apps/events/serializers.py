@@ -30,3 +30,4 @@ class AvailabilityRuleSerializer(serializers.ModelSerializer):
     class Meta:
         model = AvailabilityRule
         fields = ['event_type', 'day_of_week', 'start_time', 'end_time']
+        read_only_fields = ['event_type']
