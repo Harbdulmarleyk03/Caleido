@@ -84,15 +84,18 @@ class EventTypeViewSet(viewsets.ModelViewSet):
 class AvailabilityScheduleListView(generics.ListCreateAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsAvailabilityRuleOwner]
+    renderer_classes = [BrowsableAPIRenderer]
 
     def get_queryset(self):
-        queryset = AvailabilityRule.objects.filter(event_type__owner=self.request.user)
+        event_type_id = self.kwargs.get('event_type_id')
+        queryset = AvailabilityRule.objects.filter(event_type__id=event_type_id, event_type__owner=self.request.user).select_related(
+            'event_type', 'event_type__owner')
         return queryset
 
     def perform_create(self, serializer):
         event_type_id = self.kwargs.get('event_type_id')
         event_type = get_object_or_404(EventType, pk=event_type_id, owner=self.request.user)
-        AvailabilityScheduleService.create_availability_schedule(event_type=event_type,**serializer.validated_data)
+        AvailabilityScheduleService.create_availability_rule(event_type=event_type,**serializer.validated_data)
         
 class AvailabilityScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AvailabilityRuleSerializer
@@ -102,4 +105,7 @@ class AvailabilityScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
         return AvailabilityRule.objects.select_related('event_type').filter(event_type__owner=self.request.user, event_type_id=self.kwargs['event_type_id'])
     
     def perform_update(self, serializer):
-        AvailabilityScheduleService.update_availability_schedule(availability_rule_id=self.get_object().id, **serializer.validated_data)
+        AvailabilityScheduleService.update_availability_rule(
+            availability_rule_id=serializer.instance.id,
+            **serializer.validated_data
+        )

@@ -2,7 +2,7 @@ from apps.events.models import AvailabilityRule
 
 class AvailabilityScheduleService:
     @staticmethod
-    def create_availability_schedule(event_type, day_of_week, start_time, end_time):  
+    def create_availability_rule(event_type, day_of_week, start_time, end_time):  
         overlapping = AvailabilityRule.objects.filter(
             event_type=event_type, day_of_week=day_of_week, start_time__lt=end_time, end_time__gt=start_time,).exists()
         if overlapping:
@@ -19,10 +19,10 @@ class AvailabilityScheduleService:
             raise ValueError("Start time must occur before end time")
     
     @staticmethod
-    def update_availability_schedule(availability_rule_id, day_of_week, start_time, end_time):
-        availability_schedule = AvailabilityRule.objects.get(id=availability_rule_id)
-        availability_schedule.day_of_week = day_of_week
-        availability_schedule.start_time = start_time
-        availability_schedule.end_time = end_time
-        availability_schedule.save()
-        return availability_schedule
+    def update_availability_rule(availability_rule_id, day_of_week, start_time, end_time):
+        availability_rule = AvailabilityRule.objects.get(id=availability_rule_id)
+        availability_rule.day_of_week = day_of_week
+        availability_rule.start_time = start_time
+        availability_rule.end_time = end_time
+        availability_rule.save()
+        return availability_rule
