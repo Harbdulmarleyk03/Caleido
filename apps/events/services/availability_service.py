@@ -1,6 +1,6 @@
 from apps.events.models import AvailabilityRule
 
-class AvailabilityScheduleService:
+class AvailabilityRuleService:
     @staticmethod
     def create_availability_rule(event_type, day_of_week, start_time, end_time):  
         overlapping = AvailabilityRule.objects.filter(

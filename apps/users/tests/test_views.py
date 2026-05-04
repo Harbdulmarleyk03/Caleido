@@ -1,14 +1,12 @@
 from django.db import connection
 import pytest 
-from apps.users.models import BlacklistedToken, OutstandingToken, User
+from apps.users.models import OutstandingToken, User
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.users.tests.factories import UserFactory
 from apps.users.tokens import generate_password_reset_token, generate_verification_token
 from unittest.mock import patch
 from django.core.signing import SignatureExpired
 from django.utils import timezone        
-from conftest import user
-from datetime import timedelta
 
 @pytest.mark.django_db
 class TestRegisterView:

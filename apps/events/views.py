@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 from rest_framework.permissions import IsAuthenticated
 from apps.events.permissions import IsEventTypeOwner, IsAvailabilityRuleOwner
-from apps.events.services.availability_service import AvailabilityScheduleService
+from apps.events.services.availability_service import AvailabilityRuleService
 
 class EventTypeViewSet(viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
@@ -81,10 +81,9 @@ class EventTypeViewSet(viewsets.ModelViewSet):
         event_type.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class AvailabilityScheduleListView(generics.ListCreateAPIView):
+class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsAvailabilityRuleOwner]
-    renderer_classes = [BrowsableAPIRenderer]
 
     def get_queryset(self):
         event_type_id = self.kwargs.get('event_type_id')
@@ -95,9 +94,9 @@ class AvailabilityScheduleListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         event_type_id = self.kwargs.get('event_type_id')
         event_type = get_object_or_404(EventType, pk=event_type_id, owner=self.request.user)
-        AvailabilityScheduleService.create_availability_rule(event_type=event_type,**serializer.validated_data)
+        AvailabilityRuleService.create_availability_rule(event_type=event_type,**serializer.validated_data)
         
-class AvailabilityScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
+class AvailabilityRuleDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsAvailabilityRuleOwner]
     
@@ -105,7 +104,7 @@ class AvailabilityScheduleDetailView(generics.RetrieveUpdateDestroyAPIView):
         return AvailabilityRule.objects.select_related('event_type').filter(event_type__owner=self.request.user, event_type_id=self.kwargs['event_type_id'])
     
     def perform_update(self, serializer):
-        AvailabilityScheduleService.update_availability_rule(
+        AvailabilityRuleService.update_availability_rule(
             availability_rule_id=serializer.instance.id,
             **serializer.validated_data
         )
