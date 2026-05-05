@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from apps.events.permissions import IsEventTypeOwner, IsAvailabilityRuleOwner
 from apps.events.services.availability_service import AvailabilityRuleService
 
+# Event Type Views
 class EventTypeViewSet(viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
 
@@ -80,31 +81,39 @@ class EventTypeViewSet(viewsets.ModelViewSet):
         self.check_object_permissions(request, event_type)
         event_type.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
+    
+# Availability Rules Views
 class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsAvailabilityRuleOwner]
 
+    def get_event_type(self):
+        # Cache on the request cycle so we don't hit the DB twice
+        if not hasattr(self, '_event_type'):
+            self._event_type = get_object_or_404(EventType, pk=self.kwargs['event_type_id'], owner=self.request.user)
+        return self._event_type
+
+    def get_serializer_context(self):
+        # Injects event_type so the serializer can do overlap validation
+        context = super().get_serializer_context()
+        context['event_type'] = self.get_event_type()
+        return context
+
     def get_queryset(self):
-        event_type_id = self.kwargs.get('event_type_id')
-        queryset = AvailabilityRule.objects.filter(event_type__id=event_type_id, event_type__owner=self.request.user).select_related(
-            'event_type', 'event_type__owner')
-        return queryset
+        return AvailabilityRule.objects.filter(event_type=self.get_event_type()).select_related('event_type', 'event_type__owner')
 
     def perform_create(self, serializer):
-        event_type_id = self.kwargs.get('event_type_id')
-        event_type = get_object_or_404(EventType, pk=event_type_id, owner=self.request.user)
-        AvailabilityRuleService.create_availability_rule(event_type=event_type,**serializer.validated_data)
-        
-class AvailabilityRuleDetailView(generics.RetrieveUpdateDestroyAPIView):
+        AvailabilityRuleService.create_availability_rule(
+            event_type=self.get_event_type(),
+            validated_data=serializer.validated_data,
+        )
+
+class AvailabilityRuleDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsAvailabilityRuleOwner]
-    
+
     def get_queryset(self):
-        return AvailabilityRule.objects.select_related('event_type').filter(event_type__owner=self.request.user, event_type_id=self.kwargs['event_type_id'])
-    
-    def perform_update(self, serializer):
-        AvailabilityRuleService.update_availability_rule(
-            availability_rule_id=serializer.instance.id,
-            **serializer.validated_data
+        return AvailabilityRule.objects.select_related('event_type').filter(
+            event_type__owner=self.request.user,
+            event_type_id=self.kwargs['event_type_id'],
         )

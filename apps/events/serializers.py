@@ -31,3 +31,22 @@ class AvailabilityRuleSerializer(serializers.ModelSerializer):
         model = AvailabilityRule
         fields = ['event_type', 'day_of_week', 'start_time', 'end_time']
         read_only_fields = ['event_type']
+
+    def validate(self, data):
+        if data['start_time'] >= data['end_time']:
+            raise serializers.ValidationError('Start time must occur before end time')
+        event_type = self.context.get('event_type')
+        if event_type:
+            overlapping = AvailabilityRule.objects.filter(
+                event_type=event_type,
+                day_of_week=data['day_of_week'],
+                start_time__lt=data['end_time'],   # existing rule starts before new one ends
+                end_time__gt=data['start_time'],   # existing rule ends after new one starts
+            )
+            # Exclude current instance on updates (PATCH/PUT)
+            if self.instance:
+                overlapping = overlapping.exclude(pk=self.instance.pk)
+
+            if overlapping.exists():
+                raise serializers.ValidationError("This time window overlaps with an existing rule.")
+        return data

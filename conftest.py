@@ -19,3 +19,7 @@ def auth_client(verified_user):
     client = APIClient()
     client.force_authenticate(user=verified_user)
     return client
+
+@pytest.fixture
+def owner(db):
+    return UserFactory(is_verified=True)
