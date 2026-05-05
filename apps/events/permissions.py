@@ -17,3 +17,12 @@ class IsAvailabilityRuleOwner(permissions.BasePermission):
         # so we'll always allow GET, HEAD or OPTIONS requests.
         # Instance must have an attribute named `owner`.
         return obj.event_type.owner == request.user
+    
+class IsDateOverrideOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # Read permissions are allowed to any request,
+        # so we'll always allow GET, HEAD or OPTIONS requests.
+        # Instance must have an attribute named `owner`.
+        return obj.event_type.owner == request.user
+    
+    

@@ -1,4 +1,4 @@
-from apps.events.models import EventType, AvailabilityRule
+from apps.events.models import EventType, AvailabilityRule, DateOverride
 from rest_framework import serializers 
 
 class EventTypeSerializer(serializers.ModelSerializer):
@@ -50,3 +50,30 @@ class AvailabilityRuleSerializer(serializers.ModelSerializer):
             if overlapping.exists():
                 raise serializers.ValidationError("This time window overlaps with an existing rule.")
         return data
+    
+class DateOverrideSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DateOverride
+        fields = ['specific_date', 'is_unavailable', 'custom_start', 'custom_end']
+        read_only_fields = ['event_type']
+
+    def validate(self, data):
+        if data['custom_start'] >= data['custom_end']:
+            raise serializers.ValidationError('Start time must occur before end time')
+        
+        event_type = self.context.get('event_type')
+        if event_type:
+            overlapping = DateOverride.objects.filter(
+                event_type=event_type,
+                specific_date=data['specific_date'],
+                is_unavailable=False,
+                custom_start__lt=data['custom_end'],
+                custom_end__gt=data['custom_start'],
+            )
+
+            if self.instance:
+                overlapping = overlapping.exclude(pk=self.instance.pk)
+            
+            if overlapping.exists():
+                raise serializers.ValidationError("This time window overlaps with an existing rule.")
+        return data 

@@ -1,13 +1,15 @@
-from apps.events.models import EventType, AvailabilityRule
+from apps.events.models import EventType, AvailabilityRule, DateOverride
 from rest_framework import viewsets, status, generics   
 from rest_framework.response import Response 
 from apps.events.serializers import (EventTypeSerializer, EventTypeListSerializer, 
-            EventTypeDetailSerializer, EventTypeUpdateSerializer, AvailabilityRuleSerializer)
+            EventTypeDetailSerializer, EventTypeUpdateSerializer, AvailabilityRuleSerializer,
+            DateOverrideSerializer)
 from django.shortcuts import get_object_or_404
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 from rest_framework.permissions import IsAuthenticated
-from apps.events.permissions import IsEventTypeOwner, IsAvailabilityRuleOwner
+from apps.events.permissions import IsEventTypeOwner, IsAvailabilityRuleOwner, IsDateOverrideOwner
 from apps.events.services.availability_service import AvailabilityRuleService
+from apps.events.services.date_override_service import DateOverrideService
 
 # Event Type Views
 class EventTypeViewSet(viewsets.ModelViewSet):
@@ -115,5 +117,38 @@ class AvailabilityRuleDetailView(generics.RetrieveDestroyAPIView):
     def get_queryset(self):
         return AvailabilityRule.objects.select_related('event_type').filter(
             event_type__owner=self.request.user,
-            event_type_id=self.kwargs['event_type_id'],
+            event_type_id=self.kwargs['event_type_id'])
+    
+class DateOverrideListCreateView(generics.ListCreateAPIView):
+    serializer_class = DateOverrideSerializer
+    permission_classes = [IsAuthenticated, IsDateOverrideOwner]
+
+    def get_event_type(self):
+        # Cache on the request cycle so we don't hit the DB twice
+        if not hasattr(self, '_event_type'):
+            self._event_type = get_object_or_404(EventType, pk=self.kwargs['event_type_id'], owner=self.request.user)
+        return self._event_type
+
+    def get_serializer_context(self):
+        # Injects event_type so the serializer can do overlap validation
+        context = super().get_serializer_context()
+        context['event_type'] = self.get_event_type()
+        return context
+
+    def get_queryset(self):
+        return DateOverride.objects.filter(event_type=self.get_event_type()).select_related('event_type', 'event_type__owner')
+
+    def perform_create(self, serializer):
+        DateOverrideService.create_date_override(
+            event_type=self.get_event_type(),
+            validated_data=serializer.validated_data,
         )
+
+class DateOverrideDetailView(generics.RetrieveDestroyAPIView):
+    serializer_class = DateOverrideSerializer
+    permission_classes = [IsAuthenticated, IsDateOverrideOwner]
+
+    def get_queryset(self):
+        return DateOverride.objects.select_related('event_type').filter(
+            event_type__owner=self.request.user,
+            event_type_id=self.kwargs['event_type_id'])
