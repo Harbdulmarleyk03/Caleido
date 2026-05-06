@@ -7,7 +7,7 @@ from apps.events.serializers import (EventTypeSerializer, EventTypeListSerialize
 from django.shortcuts import get_object_or_404
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
 from rest_framework.permissions import IsAuthenticated
-from apps.events.permissions import IsEventTypeOwner, IsAvailabilityRuleOwner, IsDateOverrideOwner
+from apps.events.permissions import IsEventTypeOwner, IsNestedResourceOwner
 from apps.events.services.availability_service import AvailabilityRuleService
 from apps.events.services.date_override_service import DateOverrideService
 
@@ -87,7 +87,7 @@ class EventTypeViewSet(viewsets.ModelViewSet):
 # Availability Rules Views
 class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
     serializer_class = AvailabilityRuleSerializer
-    permission_classes = [IsAuthenticated, IsAvailabilityRuleOwner]
+    permission_classes = [IsAuthenticated, IsNestedResourceOwner]
 
     def get_event_type(self):
         # Cache on the request cycle so we don't hit the DB twice
@@ -112,7 +112,7 @@ class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
 
 class AvailabilityRuleDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = AvailabilityRuleSerializer
-    permission_classes = [IsAuthenticated, IsAvailabilityRuleOwner]
+    permission_classes = [IsAuthenticated, IsNestedResourceOwner]
 
     def get_queryset(self):
         return AvailabilityRule.objects.select_related('event_type').filter(
@@ -121,7 +121,7 @@ class AvailabilityRuleDetailView(generics.RetrieveDestroyAPIView):
     
 class DateOverrideListCreateView(generics.ListCreateAPIView):
     serializer_class = DateOverrideSerializer
-    permission_classes = [IsAuthenticated, IsDateOverrideOwner]
+    permission_classes = [IsAuthenticated, IsNestedResourceOwner]
 
     def get_event_type(self):
         # Cache on the request cycle so we don't hit the DB twice
@@ -146,7 +146,7 @@ class DateOverrideListCreateView(generics.ListCreateAPIView):
 
 class DateOverrideDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = DateOverrideSerializer
-    permission_classes = [IsAuthenticated, IsDateOverrideOwner]
+    permission_classes = [IsAuthenticated, IsNestedResourceOwner]
 
     def get_queryset(self):
         return DateOverride.objects.select_related('event_type').filter(

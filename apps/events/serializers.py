@@ -58,9 +58,15 @@ class DateOverrideSerializer(serializers.ModelSerializer):
         read_only_fields = ['event_type']
 
     def validate(self, data):
-        if data['custom_start'] >= data['custom_end']:
-            raise serializers.ValidationError('Start time must occur before end time')
-        
+        is_unavailable = data.get('is_unavailable')
+        if is_unavailable == False:
+            custom_start = data.get('custom_start')
+            custom_end = data.get('custom_end')
+            if custom_start is None or custom_end is None:
+                raise serializers.ValidationError("Start time and end time are required when is_unavailable is False")
+            if data['custom_start'] >= data['custom_end']:
+                raise serializers.ValidationError('Start time must occur before end time')
+            
         event_type = self.context.get('event_type')
         if event_type:
             overlapping = DateOverride.objects.filter(
@@ -76,4 +82,16 @@ class DateOverrideSerializer(serializers.ModelSerializer):
             
             if overlapping.exists():
                 raise serializers.ValidationError("This time window overlaps with an existing rule.")
+        
+            existing = DateOverride.objects.filter(
+                event_type=event_type,
+                specific_date=data['specific_date']
+            )
+
+            if self.instance:
+                existing = existing.exclude(pk=self.instance.pk)
+            
+            if existing.exists():
+                raise serializers.ValidationError("An override already exists for this date.")
+
         return data 
