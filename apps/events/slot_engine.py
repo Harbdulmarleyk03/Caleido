@@ -1,28 +1,22 @@
-from datetime import time, date, datetime
+from datetime import date, time, datetime
+import pytz 
 
-def generate_slot(rules, overrides, bookings, date, timezone, duration, buffer_before, buffer_after, min_notice_hours, owner_timezone):
-    day_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-    start_time, end_time = time(9, 0), time(17, 0)
-    specific_date = ""
-    is_unavailable = [True, False]
-    custom_start, custom_end = time(), time()
+def get_availability_window(rules, target_date: date, owner_timezone: str):
+    tz = pytz.timezone(owner_timezone)
 
-    rules = [{day_of_week, start_time, end_time}]
+    for rule in rules:
+        if rule['day_of_week'] == target_date.weekday():
+            # Combine date + time, localize to owner tz, then convert to UTC
+            start_local = tz.localize(datetime.combine(target_date, rule['start_time']))
+            end_local = tz.localize(datetime.combine(target_date, rule['end_time']))
 
-    overrides = [{specific_date, is_unavailable, custom_start, custom_end}]
+            return start_local.astimezone(pytz.UTC), end_local.astimezone(pytz.UTC)
+        
+        return None, None
     
-    bookings = [{}]
+def apply_date_overrides(overrides, date, owner_timezone: str):
+    tz = pytz.timezone(owner_timezone)
 
-    date = datetime.strptime(date, "%Y-%m-%d").date()
 
-    timezone = "Africa/Lagos"
-
-    duration = 30
-
-    buffer_before = 15
-
-    buffer_after = 15
-
-    min_notice_hours = 4
-
-    owner_timezone = "Africa/Lagos"
+def generate_candidate_slots(window_start, window_end, duration_minutes):
+    pass 
