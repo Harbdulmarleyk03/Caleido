@@ -1,7 +1,6 @@
 import pytest
 import pytz 
 from datetime import date, time, datetime
-
 from apps.events.slot_engine import apply_date_override, get_availability_window
 
 @pytest.fixture
@@ -53,3 +52,5 @@ def test_apply_date_override_with_custom_times():
     expected_end = tz.localize(datetime.combine(target_date, time(15, 0))).astimezone(pytz.UTC)
 
     assert result == (expected_start, expected_end)
+
+    
