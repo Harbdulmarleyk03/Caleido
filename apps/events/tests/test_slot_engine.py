@@ -2,7 +2,7 @@ import pytest
 import pytz 
 from datetime import date, time, datetime
 
-from apps.events.slot_engine import get_availability_window
+from apps.events.slot_engine import apply_date_override, get_availability_window
 
 @pytest.fixture
 def saturday_rules():
@@ -30,3 +30,26 @@ def test_returns_utc_window_when_date_do_not_matches_rule(saturday_rules):
 
     assert window_start is None 
     assert window_end is None 
+
+
+def test_apply_date_override_with_unavailable():
+    overrides = [{'specific_date': date(2026, 5, 9), 'is_unavailable': True}]
+    owner_timezone = ("Africa/Lagos")
+    target_date = date(2026, 5, 9)
+
+    result = apply_date_override(overrides, target_date, owner_timezone)
+
+    assert result == (None, None)
+
+def test_apply_date_override_with_custom_times():
+    overrides = [{'specific_date': date(2026, 5, 9), 'is_unavailable': False, 'custom_start': time(10, 0), 'custom_end': time(15, 0)}]
+    owner_timezone = ("Africa/Lagos")
+    target_date = date(2026, 5, 9)
+
+    result = apply_date_override(overrides, target_date, owner_timezone)
+
+    tz = pytz.timezone(owner_timezone)
+    expected_start = tz.localize(datetime.combine(target_date, time(10, 0))).astimezone(pytz.UTC)
+    expected_end = tz.localize(datetime.combine(target_date, time(15, 0))).astimezone(pytz.UTC)
+
+    assert result == (expected_start, expected_end)
