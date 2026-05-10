@@ -12,4 +12,5 @@ urlpatterns += [
     path('event-types/<uuid:event_type_id>/availability/', views.AvailabilityRuleListCreateView.as_view(), name='availability-rule-list-create'),
     path('event-types/<uuid:event_type_id>/date-override/<uuid:pk>/', views.DateOverrideDetailView.as_view(), name='date-override-detail'),
     path('event-types/<uuid:event_type_id>/date-override/', views.DateOverrideListCreateView.as_view(), name='date-override-list-create'),
+    path("event-types/<uuid:event_type_id>/slots/", views.SlotListView.as_view(), name="event-type-slots"),
 ]

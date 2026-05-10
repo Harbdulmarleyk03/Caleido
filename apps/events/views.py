@@ -1,3 +1,6 @@
+from datetime import datetime
+from urllib import request
+
 from apps.events.models import EventType, AvailabilityRule, DateOverride
 from rest_framework import viewsets, status, generics   
 from rest_framework.response import Response 
@@ -6,10 +9,15 @@ from apps.events.serializers import (EventTypeSerializer, EventTypeListSerialize
             DateOverrideSerializer)
 from django.shortcuts import get_object_or_404
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from apps.events.permissions import IsEventTypeOwner, IsNestedResourceOwner
 from apps.events.services.availability_service import AvailabilityRuleService
 from apps.events.services.date_override_service import DateOverrideService
+from rest_framework.views import APIView
+from apps.events.slot_engine import generate_slots
+from apps.bookings.models import Booking
+from rest_framework.exceptions import ValidationError
+import pytz 
 
 # Event Type Views
 class EventTypeViewSet(viewsets.ModelViewSet):
@@ -152,3 +160,34 @@ class DateOverrideDetailView(generics.RetrieveDestroyAPIView):
         return DateOverride.objects.select_related('event_type').filter(
             event_type__owner=self.request.user,
             event_type_id=self.kwargs['event_type_id'])
+    
+class SlotListView(APIView):
+    permission_classes = [AllowAny]
+    def get(self, request, event_type_id):
+        date_str = request.query_params.get('date')
+        if date_str is None:
+            raise ValidationError({'date': "Date is missing"})
+        try:
+            target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            return Response({'error': 'Invalid date format'}, status=status.HTTP_400_BAD_REQUEST)
+        timezone = request.query_params.get('timezone', 'UTC')
+        if timezone not in pytz.all_timezones:
+            raise ValidationError({'timezone': 'Invalid timezone'})
+        event_type = get_object_or_404(EventType, pk=event_type_id, is_active=True)
+        rules = AvailabilityRule.objects.filter(event_type=event_type).values()
+        overrides = DateOverride.objects.filter(event_type=event_type).values()
+        bookings = Booking.objects.filter(event_type=event_type, status='confirmed', start_time__date=target_date).values('start_time', 'end_time')
+        duration = event_type.duration_minutes
+        buffer_before = event_type.buffer_before_min
+        buffer_after = event_type.buffer_after_min
+        min_notice_hours = event_type.min_notice_hours
+        max_future_days = event_type.max_future_days
+        owner_timezone = event_type.owner.timezone
+        now = datetime.now(pytz.UTC)
+        slots = generate_slots(rules, overrides, bookings, target_date, timezone,
+                               duration, buffer_before, buffer_after, min_notice_hours, 
+                               max_future_days, owner_timezone, now)
+        response = Response({'slots': slots})
+        response['Cache-Control'] = 'public, max-age=60'
+        return response

@@ -53,4 +53,8 @@ def test_apply_date_override_with_custom_times():
 
     assert result == (expected_start, expected_end)
 
-    
+def test_apply_date_override_with_no_match():
+    overrides = [{'specific_date': date(2026, 5, 9), 'is_unavailable': True}]
+    target_date = date(2026, 5, 9)
+    result = apply_date_override(overrides, target_date, 'Africa/Lagos')
+    assert result == (None, None)
