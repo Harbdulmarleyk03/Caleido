@@ -6,7 +6,6 @@ from apps.users.tests.factories import UserFactory
 from apps.users.tokens import generate_password_reset_token, generate_verification_token
 from unittest.mock import patch
 from django.core.signing import SignatureExpired
-from django.utils import timezone        
 
 @pytest.mark.django_db
 class TestRegisterView:

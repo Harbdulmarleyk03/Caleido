@@ -5,10 +5,6 @@ from apps.users.tests.factories import UserFactory
 from apps.events.models import EventType
 
 @pytest.fixture
-def owner(db):
-    return UserFactory(is_verified=True)
-
-@pytest.fixture
 def other_user(db):
     return UserFactory(is_verified=True)
 
