@@ -7,8 +7,14 @@ def get_availability_window(rules, target_date: date, owner_timezone: str):
     for rule in rules:
         if rule['day_of_week'] == target_date.weekday():
             # Combine date + time, localize to owner tz, then convert to UTC
-            start_local = tz.localize(datetime.combine(target_date, rule['start_time']))
-            end_local = tz.localize(datetime.combine(target_date, rule['end_time']))
+            try:
+                start_local = tz.localize(datetime.combine(target_date, rule['start_time']))
+                end_local = tz.localize(datetime.combine(target_date, rule['end_time']))
+            except (pytz.AmbiguousTimeError, pytz.NonExistentTimeError):
+                return None, None
+            
+            if end_local <= start_local:
+                    end_local += timedelta(days=1)
 
             return start_local.astimezone(pytz.UTC), end_local.astimezone(pytz.UTC)
         
@@ -21,8 +27,14 @@ def apply_date_override(overrides, date, owner_timezone: str):
         if override['specific_date'] != date:
             continue
         if not override['is_unavailable']: 
-            custom_start_local = tz.localize(datetime.combine(date, override['custom_start']))
-            custom_end_local = tz.localize(datetime.combine(date, override['custom_end']))
+            try:
+                custom_start_local = tz.localize(datetime.combine(date, override['custom_start']))
+                custom_end_local = tz.localize(datetime.combine(date, override['custom_end']))
+            except (pytz.AmbiguousTimeError, pytz.NonExistentTimeError):
+                return None, None
+            
+            if custom_end_local <= custom_start_local:
+                    custom_end_local += timedelta(days=1)
 
             return custom_start_local.astimezone(pytz.UTC), custom_end_local.astimezone(pytz.UTC)
             

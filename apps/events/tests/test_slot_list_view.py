@@ -80,7 +80,7 @@ class TestSlotListView:
             start_time="9:00:00",
             end_time="12:00:00"
         )
-        response = auth_client.get(url, {'date': '2026-05-14', 'timezone': 'Africa/Lagos'})
+        response = auth_client.get(url, {'date': '2026-05-21', 'timezone': 'Africa/Lagos'})
         assert response.status_code == 200 
         assert len(response.data['slots']) > 0
             
