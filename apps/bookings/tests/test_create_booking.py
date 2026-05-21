@@ -1,12 +1,11 @@
-from urllib import response
-
 import pytest
 from apps.bookings.services import BookingService
 from django.urls import reverse
 from rest_framework.test import APIClient
 from apps.events.models import EventType
 from apps.users.tests.factories import UserFactory
-from datetime import datetime
+from datetime import datetime, timedelta
+from django.utils import timezone
 import pytz
 
 @pytest.fixture
@@ -27,15 +26,16 @@ def event_type(owner):
         buffer_after_min=0,
     )
 
-start = datetime(2026, 5, 21, 9, 0, tzinfo=pytz.UTC)
-end = datetime(2026, 5, 21, 9, 30, tzinfo=pytz.UTC)
+start = datetime(2026, 6, 15, 9, 0, tzinfo=pytz.UTC)
+end = datetime(2026, 6, 15, 9, 30, tzinfo=pytz.UTC)
+future_start = timezone.now() + timedelta(days=1)
 
 @pytest.mark.django_db
 class TestCreateBookingView:
 
     def test_create_booking(self, event_type, api_client):
         data = {
-            'start_time': "2026-05-21T09:00:00Z",
+            'start_time': future_start.isoformat(),
             'event_type': str(event_type.id),
             'invitee_name': 'Karl',
             'invitee_email': 'karl@example.com',
@@ -61,7 +61,7 @@ class TestCreateBookingView:
             user=owner
         )
         data = {
-            'start_time': "2026-05-21T09:00:00Z",
+            'start_time': future_start.isoformat(),
             'event_type': str(event_type.id),
             'invitee_name': 'Karl',
             'invitee_email': 'karl@example.com',
@@ -72,13 +72,17 @@ class TestCreateBookingView:
 
         url = reverse('booking-list')
         response = api_client.post(url, data, format='json')
-        assert response.status_code == 200
+        assert response.status_code == 201
         assert 'id' in response.data 
 
     def test_conflicting_slots(self, event_type, owner, api_client):
+        base_start = timezone.now() + timedelta(days=1)
+        base_end = base_start + timedelta(minutes=30)
+
+        conflicting_start = base_start + timedelta(minutes=15)
         BookingService.create_booking(
-            start_time=start,
-            end_time=end,
+            start_time=base_start,
+            end_time=base_end,
             event_type=event_type,
             invitee_name='Lanre',
             invitee_email='lanre@example.com',
@@ -88,7 +92,7 @@ class TestCreateBookingView:
             user=owner
         )
         data = {
-            'start_time': "2026-05-21T09:15:00Z",
+            'start_time': conflicting_start.isoformat(),
             'event_type': str(event_type.id),
             'invitee_name': 'Karl',
             'invitee_email': 'karl@example.com',
@@ -103,7 +107,7 @@ class TestCreateBookingView:
 
     def test_missing_required_fields(self, api_client):
         data = {
-            'start_time': "2026-05-21T09:00:00Z",
+            'start_time': "2026-05-15T09:00:00Z",
             'invitee_name': 'Karl',
             'invitee_email': 'karl@example.com',
             'invitee_timezone': 'Africa/Lagos',

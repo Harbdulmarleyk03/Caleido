@@ -16,6 +16,11 @@ class BookingService:
             booking = Booking.objects.create(start_time=start_time, end_time=end_time, idempotency_key=idempotency_key, status='confirmed', event_type=event_type)
             Invitee.objects.create(
                 booking=booking, name=invitee_name, email=invitee_email, timezone=invitee_timezone, notes=invitee_notes)
-            BookingAudit.objects.create(action="created", previous_data={}, changed_by=user, booking=booking)
+            audit_user = (
+                user
+                if user and user.is_authenticated
+                else event_type.owner
+            )
+            BookingAudit.objects.create(action="created", previous_data={}, changed_by=audit_user, booking=booking)
             return booking
 

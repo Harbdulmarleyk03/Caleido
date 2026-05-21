@@ -2,6 +2,7 @@ from datetime import timedelta
 from apps.bookings.models import Booking, Invitee, BookingAudit, BookingAnswer
 from rest_framework import serializers
 from django.utils import timezone
+from common.exceptions import ConflictError
 
 class InviteeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -30,7 +31,7 @@ class CreateBookingSerializer(serializers.ModelSerializer):
        overlapping = Booking.objects.filter(event_type=event_type, status = "confirmed", start_time__lt=end, end_time__gt=start)
 
        if overlapping.exists():
-           raise serializers.ValidationError("This time slot is already booked.")
+           raise ConflictError("The slot is already taken.")
        
        return data 
 
