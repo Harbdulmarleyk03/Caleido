@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/v1/users/', include('apps.users.urls.urls')),
     path('api/v1/auth/', include('apps.users.urls.auth')),
     path('api/v1/events/', include('apps.events.urls')),
+    path('api/v1/', include('apps.bookings.urls')),
 ]
 
 if settings.DEBUG:
