@@ -45,7 +45,6 @@ class TestCreateBookingView:
         }
         url = reverse('booking-list')
         response = api_client.post(url, data, format='json')
-        print(response.data)
         assert response.status_code == 201 
 
     def test_duplicate_idempotency_key(self, event_type, owner, api_client):

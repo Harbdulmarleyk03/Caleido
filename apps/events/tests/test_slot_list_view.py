@@ -76,11 +76,11 @@ class TestSlotListView:
         url = reverse('event-type-slots', kwargs={'event_type_id': event_type.id})
         AvailabilityRule.objects.create(
             event_type=event_type,
-            day_of_week=3,
+            day_of_week=4,
             start_time="9:00:00",
             end_time="12:00:00"
         )
-        response = auth_client.get(url, {'date': '2026-05-21', 'timezone': 'Africa/Lagos'})
+        response = auth_client.get(url, {'date': '2026-06-19', 'timezone': 'Africa/Lagos'})
         assert response.status_code == 200 
         assert len(response.data['slots']) > 0
             

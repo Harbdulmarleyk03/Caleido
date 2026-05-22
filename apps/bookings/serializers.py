@@ -14,7 +14,7 @@ class CreateBookingSerializer(serializers.ModelSerializer):
     invitee_email = serializers.EmailField()
     invitee_timezone = serializers.CharField()
     invitee_notes = serializers.CharField(required=False,  allow_null=True, allow_blank=True)
-    idempotency_key = serializers.CharField()
+    idempotency_key = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     class Meta:
         model = Booking
         fields = ['event_type', 'start_time', 'invitee_name', 'invitee_email', 'invitee_timezone', 'invitee_notes', 'idempotency_key']
