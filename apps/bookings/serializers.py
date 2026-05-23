@@ -14,7 +14,7 @@ class CreateBookingSerializer(serializers.ModelSerializer):
     invitee_email = serializers.EmailField()
     invitee_timezone = serializers.CharField()
     invitee_notes = serializers.CharField(required=False,  allow_null=True, allow_blank=True)
-    idempotency_key = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    idempotency_key = serializers.CharField(required=True, allow_blank=True, allow_null=True)
     class Meta:
         model = Booking
         fields = ['event_type', 'start_time', 'invitee_name', 'invitee_email', 'invitee_timezone', 'invitee_notes', 'idempotency_key']
@@ -27,11 +27,6 @@ class CreateBookingSerializer(serializers.ModelSerializer):
 
        if start < timezone.now():
            raise serializers.ValidationError("Cannot book a slot in the past.")
-       
-       overlapping = Booking.objects.filter(event_type=event_type, status = "confirmed", start_time__lt=end, end_time__gt=start)
-
-       if overlapping.exists():
-           raise ConflictError("The slot is already taken.")
        
        return data 
 
