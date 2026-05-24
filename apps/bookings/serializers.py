@@ -2,7 +2,6 @@ from datetime import timedelta
 from apps.bookings.models import Booking, Invitee, BookingAudit, BookingAnswer
 from rest_framework import serializers
 from django.utils import timezone
-from common.exceptions import ConflictError
 
 class InviteeSerializer(serializers.ModelSerializer):
     class Meta:

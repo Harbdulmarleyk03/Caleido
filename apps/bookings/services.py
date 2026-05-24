@@ -30,3 +30,19 @@ class BookingService:
             BookingAudit.objects.create(action="created", previous_data={}, changed_by=audit_user, booking=booking)
             return booking, True
 
+    @staticmethod
+    def cancel_booking(booking, user):
+        with transaction.atomic():
+            if booking.status == "cancelled":
+                raise ConflictError("Booking already cancelled.")
+            previous = {
+                'status': booking.status,
+                'start_time': booking.start_time.isoformat(),
+                'end_time': booking.end_time.isoformat(),
+            }
+            booking.status = "cancelled"
+            booking.save()
+           
+            BookingAudit.objects.create(action="cancelled", previous_data=previous, changed_by=user, booking=booking)
+        
+        

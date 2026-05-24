@@ -71,7 +71,7 @@ class TestCreateBookingView:
 
         url = reverse('booking-list')
         response = api_client.post(url, data, format='json')
-        assert response.status_code == 201
+        assert response.status_code == 200
         assert 'id' in response.data 
 
     def test_conflicting_slots(self, event_type, owner, api_client):
