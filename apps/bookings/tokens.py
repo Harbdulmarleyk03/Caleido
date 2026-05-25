@@ -14,3 +14,5 @@ def verify_cancel_token(token, max_age=604800):
         raise ValueError("Token Expired")
     except signing.BadSignature:
         raise ValueError("Token Tampered") 
+    except Booking.DoesNotExist:
+        raise ValueError("Invalid Booking")

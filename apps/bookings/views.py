@@ -9,6 +9,7 @@ from apps.bookings.filters import BookingFilter
 from rest_framework.filters import OrderingFilter
 from rest_framework.decorators import action
 from common.pagination import BookmarkCursorPagination
+from apps.bookings.permissions import CancelBookingPermission
 
 class BookingViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -54,7 +55,7 @@ class BookingViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Booking.objects.filter(event_type__owner=self.request.user).select_related('event_type', 'invitee')
 
-    @action(detail=True, methods=['patch'], url_path='cancel')
+    @action(detail=True, methods=['patch'], url_path='cancel', permission_classes=[CancelBookingPermission])
     def cancel(self, request, pk=None):
         booking = self.get_object()
         BookingService.cancel_booking(booking=booking, user=request.user)

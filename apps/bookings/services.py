@@ -25,7 +25,7 @@ class BookingService:
             audit_user = (
                 user
                 if user and user.is_authenticated
-                else event_type.owner
+                else booking.event_type.owner
             )
             BookingAudit.objects.create(action="created", previous_data={}, changed_by=audit_user, booking=booking)
             return booking, True
@@ -42,7 +42,11 @@ class BookingService:
             }
             booking.status = "cancelled"
             booking.save()
-           
-            BookingAudit.objects.create(action="cancelled", previous_data=previous, changed_by=user, booking=booking)
+            audit_user = (
+                user
+                if user and user.is_authenticated
+                else booking.event_type.owner
+            )
+            BookingAudit.objects.create(action="cancelled", previous_data=previous, changed_by=audit_user, booking=booking)
         
         
