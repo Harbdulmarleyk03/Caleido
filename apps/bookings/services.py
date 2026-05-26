@@ -48,5 +48,8 @@ class BookingService:
                 else booking.event_type.owner
             )
             BookingAudit.objects.create(action="cancelled", previous_data=previous, changed_by=audit_user, booking=booking)
-        
-        
+    
+    @staticmethod
+    def reschedule_booking(booking, user):
+        with transaction.atomic():
+            pass                 

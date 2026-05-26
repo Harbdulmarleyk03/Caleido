@@ -9,7 +9,7 @@ from apps.bookings.filters import BookingFilter
 from rest_framework.filters import OrderingFilter
 from rest_framework.decorators import action
 from common.pagination import BookmarkCursorPagination
-from apps.bookings.permissions import CancelBookingPermission
+from apps.bookings.permissions import CancelBookingPermission, RescheduleBookingPermission
 
 class BookingViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -60,3 +60,9 @@ class BookingViewSet(viewsets.ModelViewSet):
         booking = self.get_object()
         BookingService.cancel_booking(booking=booking, user=request.user)
         return Response({'status': 'Cancelled'}, status=status.HTTP_200_OK)
+    
+    @action(detail=True, methods=['patch'], url_path='reschedule', permission_classes=[RescheduleBookingPermission])
+    def reschedule(self, request, pk=None):
+        booking = self.get_object()
+        BookingService.reschedule_booking(booking=booking, user=request.user)
+        return Response({'status': 'Rescheduled'}, status=status.HTTP_200_OK)
