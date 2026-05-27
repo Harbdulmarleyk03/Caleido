@@ -50,6 +50,27 @@ class BookingService:
             BookingAudit.objects.create(action="cancelled", previous_data=previous, changed_by=audit_user, booking=booking)
     
     @staticmethod
-    def reschedule_booking(booking, user):
+    def reschedule_booking(booking, user, start_time, end_time):
         with transaction.atomic():
-            pass                 
+            booking = Booking.objects.select_for_update().get(id=booking.id)
+            if booking.status == "cancelled":
+                raise ConflictError("Cannot reschedule a cancelled booking.")
+            conflict = Booking.objects.select_for_update().filter(event_type=booking.event_type, status='confirmed', start_time__lt=end_time, end_time__gt=start_time).exclude(id=booking.id)
+            if conflict.exists():
+                raise ConflictError("The new slot is already taken.")
+            previous = {
+                'status': booking.status,
+                'start_time': booking.start_time.isoformat(),
+                'end_time': booking.end_time.isoformat(),
+            }
+            booking.start_time = start_time
+            booking.end_time = end_time
+            booking.status = "confirmed"
+            booking.save()
+            audit_user = (
+                user
+                if user and user.is_authenticated
+                else booking.event_type.owner
+            )
+            BookingAudit.objects.create(action="rescheduled", previous_data=previous, changed_by=audit_user, booking=booking)
+    

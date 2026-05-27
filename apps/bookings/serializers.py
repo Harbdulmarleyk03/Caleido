@@ -38,6 +38,14 @@ class CreateBookingSerializer(serializers.ModelSerializer):
            raise serializers.ValidationError("Cannot book a slot in the past.")
        
        return data 
+    
+class RescheduleBookingSerializer(serializers.Serializer):
+    start_time = serializers.DateTimeField()
+
+    def validate_start_time(self, value):
+        if value < timezone.now():
+            raise serializers.ValidationError("Cannot reschedule to a slot in the past.")
+        return value
 
 class BookingAuditSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from apps.bookings.models import Booking
-from apps.bookings.serializers import CreateBookingSerializer
+from apps.bookings.serializers import CreateBookingSerializer, RescheduleBookingSerializer
 from rest_framework.response import Response
 from apps.bookings.services import BookingService
 from django_filters.rest_framework import DjangoFilterBackend
@@ -10,6 +10,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework.decorators import action
 from common.pagination import BookmarkCursorPagination
 from apps.bookings.permissions import CancelBookingPermission, RescheduleBookingPermission
+from datetime import timedelta
 
 class BookingViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -64,5 +65,10 @@ class BookingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'], url_path='reschedule', permission_classes=[RescheduleBookingPermission])
     def reschedule(self, request, pk=None):
         booking = self.get_object()
-        BookingService.reschedule_booking(booking=booking, user=request.user)
+        serializer = RescheduleBookingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        start_time = data['start_time']
+        end_time = start_time + timedelta(minutes=booking.event_type.duration_minutes)
+        BookingService.reschedule_booking(booking=booking, user=request.user, start_time=start_time, end_time=end_time)
         return Response({'status': 'Rescheduled'}, status=status.HTTP_200_OK)
