@@ -11,6 +11,7 @@ from rest_framework.decorators import action
 from common.pagination import BookmarkCursorPagination
 from apps.bookings.permissions import CancelBookingPermission, RescheduleBookingPermission
 from datetime import timedelta
+from django.shortcuts import get_object_or_404
 
 class BookingViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -22,6 +23,8 @@ class BookingViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "create":
             permission_classes = [AllowAny]
+        elif self.action == "cancel":
+            permission_classes = [CancelBookingPermission]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
@@ -58,7 +61,12 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], url_path='cancel', permission_classes=[CancelBookingPermission])
     def cancel(self, request, pk=None):
-        booking = self.get_object()
+        token = request.data.get('token') or request.query_params.get('token')
+        if token:
+            booking = get_object_or_404(Booking, pk=pk)
+            self.check_object_permissions(request, booking)
+        else:
+            booking = self.get_object()
         BookingService.cancel_booking(booking=booking, user=request.user)
         return Response({'status': 'Cancelled'}, status=status.HTTP_200_OK)
     
