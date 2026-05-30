@@ -14,7 +14,7 @@ Currently in active development — Week 5 of a 12-week build.
 | Week 1-2: Foundation and Infrastructure | Done |
 | Week 3-4: Authentication and User Management | Done |
 | Week 5-6: Event Types and Booking Engine | Done |
-| Week 7-8: Notifications and Calendar Integration | Upcoming |
+| Week 7-8: Notifications and Calendar Integration | In Progress |
 | Week 9-10: Advanced Features and Payments | Upcoming |
 | Week 11-12: Performance and Deployment | Upcoming |
 
