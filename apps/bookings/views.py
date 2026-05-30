@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from apps.bookings.models import Booking
-from apps.bookings.serializers import CreateBookingSerializer, RescheduleBookingSerializer
+from apps.bookings.serializers import CreateBookingSerializer, RescheduleBookingSerializer, BookingSerializer
 from rest_framework.response import Response
 from apps.bookings.services import BookingService
 from django_filters.rest_framework import DjangoFilterBackend
@@ -25,14 +25,17 @@ class BookingViewSet(viewsets.ModelViewSet):
             permission_classes = [AllowAny]
         elif self.action == "cancel":
             permission_classes = [CancelBookingPermission]
+        elif self.action == "reschedule":
+            permission_classes = [RescheduleBookingPermission]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
     
     def get_serializer_class(self):
         if self.action == "create":
-            serializer_class = CreateBookingSerializer
-            return serializer_class
+            return CreateBookingSerializer
+        elif self.action in ["list", "retrieve"]:
+            return BookingSerializer
         
     def create(self, request):
         data = request.data.copy()
@@ -62,17 +65,15 @@ class BookingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'], url_path='cancel', permission_classes=[CancelBookingPermission])
     def cancel(self, request, pk=None):
         token = request.data.get('token') or request.query_params.get('token')
-        if token:
-            booking = get_object_or_404(Booking, pk=pk)
-            self.check_object_permissions(request, booking)
-        else:
-            booking = self.get_object()
+        booking = get_object_or_404(Booking, pk=pk)
+        self.check_object_permissions(request, booking)
         BookingService.cancel_booking(booking=booking, user=request.user)
         return Response({'status': 'Cancelled'}, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['patch'], url_path='reschedule', permission_classes=[RescheduleBookingPermission])
     def reschedule(self, request, pk=None):
-        booking = self.get_object()
+        booking = get_object_or_404(Booking, pk=pk)
+        self.check_object_permissions(request, booking)
         serializer = RescheduleBookingSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data

@@ -8,15 +8,10 @@ class InviteeSerializer(serializers.ModelSerializer):
         model = Invitee
         fields = ['booking', 'name', 'email', 'timezone', 'locale', 'notes']
 
-class BookingListSerializer(serializers.ModelSerializer):
+class BookingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Booking
-        fields = []
-
-class BookingDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Booking
-        fields = []
+        fields = ['id', 'status', 'start_time', 'end_time', 'event_type']
 
 class CreateBookingSerializer(serializers.ModelSerializer):
     invitee_name = serializers.CharField()
