@@ -65,7 +65,7 @@ python manage.py migrate
 python manage.py runserver
 
 ## Architecture
-
+    
 graph TB
     subgraph Client["🌐 Client Layer"]
         Browser["Browser / Mobile"]
@@ -97,7 +97,7 @@ graph TB
 
     subgraph External["🔌 External Services"]
         GoogleOAuth["Google OAuth 2.0"]
-        SMTP["SMTP / Email Provider"]
+        SMTP["SendGrid / SMTP"]
         Sentry["Sentry\nError Tracking · APM"]
     end
 
@@ -120,14 +120,14 @@ graph TB
     Auth --> Redis
 
     Events --> Postgres
-    Events -->|"slot cache (60s TTL)"| Redis
+    Events -->|"slot cache 60s TTL"| Redis
 
     Bookings -->|"SELECT FOR UPDATE\ntransaction.atomic()"| Postgres
-    Bookings -->|"idempotency key (24h TTL)"| Redis
+    Bookings -->|"idempotency key 24h TTL"| Redis
     Bookings -->|"on_commit signal"| CeleryWorker
 
     Analytics --> Postgres
-    Analytics -->|"cache (5 min TTL)"| Redis
+    Analytics -->|"cache 5min TTL"| Redis
 
     CeleryWorker -->|"send emails"| SMTP
     CeleryWorker --> Postgres
@@ -138,23 +138,7 @@ graph TB
     CeleryWorker -->|"task errors"| Sentry
 
     GHA --> Docker
-
-    classDef clientStyle fill:#0f172a,stroke:#38bdf8,color:#e2e8f0
-    classDef gatewayStyle fill:#1e293b,stroke:#818cf8,color:#e2e8f0
-    classDef djangoStyle fill:#1e3a5f,stroke:#60a5fa,color:#e2e8f0
-    classDef asyncStyle fill:#1a2e1a,stroke:#4ade80,color:#e2e8f0
-    classDef storageStyle fill:#2d1b4e,stroke:#a78bfa,color:#e2e8f0
-    classDef externalStyle fill:#2d1a1a,stroke:#f87171,color:#e2e8f0
-    classDef ciStyle fill:#1a2540,stroke:#94a3b8,color:#e2e8f0
-
-    class Browser,CalApp clientStyle
-    class Nginx gatewayStyle
-    class Auth,Events,Bookings,Analytics,Health,Docs djangoStyle
-    class CeleryWorker,CeleryBeat asyncStyle
-    class Postgres,Redis storageStyle
-    class GoogleOAuth,SMTP,Sentry externalStyle
-    class GHA,Docker ciStyle
-
+    
 ## API Documentation
 
 Swagger UI available at /api/docs/ when running locally.
