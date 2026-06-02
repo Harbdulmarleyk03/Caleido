@@ -65,6 +65,14 @@ python manage.py migrate
 python manage.py runserver
 
 ## Architecture
+```mermaid
+graph TD
+    A[Client] --> B[Django API]
+    B --> C[(PostgreSQL)]
+    B --> D[(Redis)]
+    B --> E[Celery Worker]
+    E --> F[SendGrid Email]
+```
     
 ## API Documentation
 
