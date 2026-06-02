@@ -65,46 +65,80 @@ python manage.py migrate
 python manage.py runserver
 
 ## Architecture
-
-```mermaid
+'''mermaid
 graph TB
-    subgraph Client
+    subgraph Client["🌐 Client Layer"]
         Browser["Browser / Mobile"]
-        CalApp["Calendar App iCal"]
+        CalApp["Calendar App\n(iCal Import)"]
     end
-    subgraph Django["Django 5 + DRF"]
-        Auth["Auth JWT · OAuth"]
-        Events["Events Slots · Availability"]
-        Bookings["Bookings Create · Cancel · Reschedule"]
-        Analytics["Analytics"]
+
+    subgraph Gateway["🔀 Entry Point"]
+        Nginx["Nginx\nReverse Proxy"]
     end
-    subgraph Async["Celery"]
-        Worker["Worker Emails · Reminders"]
-        Beat["Beat Scheduler"]
+
+    subgraph Django["⚙️ Django 5 + DRF"]
+        Auth["Auth Service\nJWT · OAuth · Email Verify"]
+        Events["Events Service\nEventType · Availability · Slots"]
+        Bookings["Bookings Service\nCreate · Cancel · Reschedule"]
+        Analytics["Analytics Service\nAggregations · Reports"]
+        Health["Health Checks\n/health/ · /health/ready/"]
+        Docs["API Docs\nSwagger · ReDoc"]
     end
-    subgraph Storage
-        Postgres[("PostgreSQL")]
-        Redis[("Redis Cache · Broker")]
+
+    subgraph Async["⚡ Async Layer"]
+        CeleryWorker["Celery Worker\nEmail · Reminders"]
+        CeleryBeat["Celery Beat\nScheduled Tasks"]
     end
-    subgraph External
-        Google["Google OAuth"]
-        SMTP["SendGrid"]
-        Sentry["Sentry"]
+
+    subgraph Storage["🗄️ Storage"]
+        Postgres[("PostgreSQL\nPrimary DB")]
+        Redis[("Redis\nCache · Queue · Idempotency")]
     end
-    Browser --> Auth
-    Browser --> Events
-    Browser --> Bookings
-    Auth --> Google
+
+    subgraph External["🔌 External Services"]
+        GoogleOAuth["Google OAuth 2.0"]
+        SMTP["SendGrid / SMTP"]
+        Sentry["Sentry\nError Tracking · APM"]
+    end
+
+    subgraph CI["🚀 CI/CD"]
+        GHA["GitHub Actions\nLint → Test → Docker Build"]
+        Docker["Docker Compose\nweb · worker · beat · db · redis"]
+    end
+
+    Browser -->|"HTTPS"| Nginx
+    CalApp -->|"iCal GET"| Nginx
+    Nginx --> Auth
+    Nginx --> Events
+    Nginx --> Bookings
+    Nginx --> Analytics
+    Nginx --> Health
+    Nginx --> Docs
+
+    Auth -->|"oauth redirect"| GoogleOAuth
     Auth --> Postgres
+    Auth --> Redis
+
     Events --> Postgres
-    Events --> Redis
-    Bookings --> Postgres
-    Bookings --> Redis
-    Bookings --> Worker
-    Worker --> SMTP
-    Worker <--> Redis
-    Beat --> Worker
-    Django --> Sentry  
+    Events -->|"slot cache 60s TTL"| Redis
+
+    Bookings -->|"SELECT FOR UPDATE\ntransaction.atomic()"| Postgres
+    Bookings -->|"idempotency key 24h TTL"| Redis
+    Bookings -->|"on_commit signal"| CeleryWorker
+
+    Analytics --> Postgres
+    Analytics -->|"cache 5min TTL"| Redis
+
+    CeleryWorker -->|"send emails"| SMTP
+    CeleryWorker --> Postgres
+    CeleryBeat -->|"ETA reminders"| CeleryWorker
+    CeleryWorker <-->|"broker + results"| Redis
+
+    Django -->|"exceptions + traces"| Sentry
+    CeleryWorker -->|"task errors"| Sentry
+
+    GHA --> Docker
+'''
     
 ## API Documentation
 
