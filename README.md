@@ -76,7 +76,7 @@ graph TB
         Nginx["Nginx\nReverse Proxy"]
     end
 
-    subgraph Django["⚙️ Django 5 + DRF"]
+    subgraph Django["Django 5 + DRF"]
         Auth["Auth Service\nJWT · OAuth · Email Verify"]
         Events["Events Service\nEventType · Availability · Slots"]
         Bookings["Bookings Service\nCreate · Cancel · Reschedule"]
@@ -85,23 +85,23 @@ graph TB
         Docs["API Docs\nSwagger · ReDoc"]
     end
 
-    subgraph Async["⚡ Async Layer"]
+    subgraph Async["Async Layer"]
         CeleryWorker["Celery Worker\nEmail · Reminders"]
         CeleryBeat["Celery Beat\nScheduled Tasks"]
     end
 
-    subgraph Storage["🗄️ Storage"]
+    subgraph Storage["Storage"]
         Postgres[("PostgreSQL\nPrimary DB")]
         Redis[("Redis\nCache · Queue · Idempotency")]
     end
 
-    subgraph External["🔌 External Services"]
+    subgraph External["External Services"]
         GoogleOAuth["Google OAuth 2.0"]
         SMTP["SendGrid / SMTP"]
         Sentry["Sentry\nError Tracking · APM"]
     end
 
-    subgraph CI["🚀 CI/CD"]
+    subgraph CI["CI/CD"]
         GHA["GitHub Actions\nLint → Test → Docker Build"]
         Docker["Docker Compose\nweb · worker · beat · db · redis"]
     end
