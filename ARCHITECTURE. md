@@ -1,0 +1,10 @@
+## Architecture
+
+```mermaid
+graph TD
+    A[Client] --> B[Django + DRF]
+    B --> C[(PostgreSQL)]
+    B --> D[(Redis)]
+    B --> E[Celery Worker]
+    E --> F[SendGrid]
+    B --> G[Sentry]
