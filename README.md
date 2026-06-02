@@ -65,13 +65,46 @@ python manage.py migrate
 python manage.py runserver
 
 ## Architecture
+
 ```mermaid
-graph TD
-    A[Client] --> B[Django API]
-    B --> C[(PostgreSQL)]
-    B --> D[(Redis)]
-    B --> E[Celery Worker]
-    E --> F[SendGrid Email]
+graph TB
+    subgraph Client
+        Browser["Browser / Mobile"]
+        CalApp["Calendar App iCal"]
+    end
+    subgraph Django["Django 5 + DRF"]
+        Auth["Auth JWT · OAuth"]
+        Events["Events Slots · Availability"]
+        Bookings["Bookings Create · Cancel · Reschedule"]
+        Analytics["Analytics"]
+    end
+    subgraph Async["Celery"]
+        Worker["Worker Emails · Reminders"]
+        Beat["Beat Scheduler"]
+    end
+    subgraph Storage
+        Postgres[("PostgreSQL")]
+        Redis[("Redis Cache · Broker")]
+    end
+    subgraph External
+        Google["Google OAuth"]
+        SMTP["SendGrid"]
+        Sentry["Sentry"]
+    end
+    Browser --> Auth
+    Browser --> Events
+    Browser --> Bookings
+    Auth --> Google
+    Auth --> Postgres
+    Events --> Postgres
+    Events --> Redis
+    Bookings --> Postgres
+    Bookings --> Redis
+    Bookings --> Worker
+    Worker --> SMTP
+    Worker <--> Redis
+    Beat --> Worker
+    Django --> Sentry
 ```
     
 ## API Documentation
