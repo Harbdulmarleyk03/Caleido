@@ -67,12 +67,12 @@ python manage.py runserver
 ## Architecture
 '''mermaid
 graph TB
-    subgraph Client["🌐 Client Layer"]
+    subgraph Client["Client Layer"]
         Browser["Browser / Mobile"]
         CalApp["Calendar App\n(iCal Import)"]
     end
 
-    subgraph Gateway["🔀 Entry Point"]
+    subgraph Gateway["Entry Point"]
         Nginx["Nginx\nReverse Proxy"]
     end
 
