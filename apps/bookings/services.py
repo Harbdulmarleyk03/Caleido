@@ -1,6 +1,7 @@
 from apps.bookings.models import Booking, Invitee, BookingAudit
 from django.db import IntegrityError, transaction
 from common.exceptions import ConflictError
+from apps.bookings.tasks import send_booking_confirmation
 
 class BookingService:
 
@@ -28,6 +29,9 @@ class BookingService:
                 else booking.event_type.owner
             )
             BookingAudit.objects.create(action="created", previous_data={}, changed_by=audit_user, booking=booking)
+            transaction.on_commit(
+            lambda: send_booking_confirmation.delay(str(booking.id))
+            )
             return booking, True
 
     @staticmethod
