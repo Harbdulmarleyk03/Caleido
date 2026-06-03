@@ -1,7 +1,7 @@
 from apps.bookings.models import Booking, Invitee, BookingAudit
 from django.db import IntegrityError, transaction
 from common.exceptions import ConflictError
-from apps.bookings.tasks import send_booking_confirmation
+from apps.bookings.tasks import send_booking_confirmation, send_booking_cancellation
 
 class BookingService:
 
@@ -52,7 +52,10 @@ class BookingService:
                 else booking.event_type.owner
             )
             BookingAudit.objects.create(action="cancelled", previous_data=previous, changed_by=audit_user, booking=booking)
-    
+            transaction.on_commit(
+            lambda: send_booking_cancellation.delay(str(booking.id))
+            )
+
     @staticmethod
     def reschedule_booking(booking, user, start_time, end_time):
         with transaction.atomic():
