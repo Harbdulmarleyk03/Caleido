@@ -7,14 +7,14 @@ and Stripe payment processing.
 
 ## Project Status
 
-Currently in active development — Week 5 of a 12-week build.
+Currently in active development — Week 7 of a 12-week build.
 
 | Phase | Status |
 |---|---|
 | Week 1-2: Foundation and Infrastructure | Done |
 | Week 3-4: Authentication and User Management | Done |
-| Week 5-6: Event Types and Booking Engine | In Progress |
-| Week 7-8: Notifications and Calendar Integration | Upcoming |
+| Week 5-6: Event Types and Booking Engine | Done |
+| Week 7-8: Notifications and Calendar Integration | In Progress |
 | Week 9-10: Advanced Features and Payments | Upcoming |
 | Week 11-12: Performance and Deployment | Upcoming |
 
@@ -66,8 +66,47 @@ python manage.py runserver
 
 ## Architecture
 
-Diagram coming in Week 6.
-
+```mermaid
+graph TB
+    subgraph Client
+        Browser["Browser / Mobile"]
+        CalApp["Calendar App iCal"]
+    end
+    subgraph Django["Django 5 + DRF"]
+        Auth["Auth JWT · OAuth"]
+        Events["Events Slots · Availability"]
+        Bookings["Bookings Create · Cancel · Reschedule"]
+        Analytics["Analytics"]
+    end
+    subgraph Async["Celery"]
+        Worker["Worker Emails · Reminders"]
+        Beat["Beat Scheduler"]
+    end
+    subgraph Storage
+        Postgres[("PostgreSQL")]
+        Redis[("Redis Cache · Broker")]
+    end
+    subgraph External
+        Google["Google OAuth"]
+        SMTP["SendGrid"]
+        Sentry["Sentry"]
+    end
+    Browser --> Auth
+    Browser --> Events
+    Browser --> Bookings
+    Auth --> Google
+    Auth --> Postgres
+    Events --> Postgres
+    Events --> Redis
+    Bookings --> Postgres
+    Bookings --> Redis
+    Bookings --> Worker
+    Worker --> SMTP
+    Worker <--> Redis
+    Beat --> Worker
+    Django --> Sentry
+```
+    
 ## API Documentation
 
 Swagger UI available at /api/docs/ when running locally.
