@@ -19,6 +19,8 @@ class Booking(AbstractBaseModel):
     google_event_id = models.CharField(max_length=255, blank=True, null=True)
     google_meet_link = models.TextField(blank=True, null=True)
     stripe_payment = models.ForeignKey("payments.StripePayment", on_delete=models.SET_NULL, null=True, blank=True, related_name="bookings")
+    reminder_24h_task_id = models.CharField(max_length=255, null=True, blank=True)
+    reminder_1h_task_id = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = "bookings_booking"

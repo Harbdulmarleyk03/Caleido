@@ -1,9 +1,43 @@
 from apps.bookings.models import Booking, Invitee, BookingAudit
 from django.db import IntegrityError, transaction
 from common.exceptions import ConflictError
-from apps.bookings.tasks import send_booking_confirmation, send_booking_cancellation, send_booking_reschedule
+from apps.bookings.tasks import send_booking_confirmation, send_booking_cancellation, send_booking_reschedule, send_booking_reminder
+from datetime import timedelta
+from django.utils import timezone
 
 class BookingService:
+
+    @staticmethod
+    def schedule_booking_reminder(booking_id):
+        booking = Booking.objects.select_related('invitee', 'event_type__owner').get(id=booking_id)
+
+        reminder_24h_eta = booking.start_time - timedelta(hours=24)
+        reminder_1h_eta = booking.start_time - timedelta(hours=1)
+        result_24h = None
+        result_1h = None
+
+        if reminder_24h_eta > timezone.now():
+            result_24h = send_booking_reminder.apply_async(
+                args=[str(booking.id), "24h"],
+                eta=reminder_24h_eta,
+            )
+
+        if reminder_1h_eta > timezone.now():
+            result_1h = send_booking_reminder.apply_async(
+                args=[str(booking.id), "1h"],
+                eta=reminder_1h_eta,
+            )
+
+        booking.reminder_24h_task_id = result_24h.id if result_24h else None 
+        booking.reminder_1h_task_id = result_1h.id if result_1h else None 
+
+        booking.save(
+        update_fields=[
+            "reminder_24h_task_id",
+            "reminder_1h_task_id",
+        ]
+    )
+
 
     @staticmethod
     def create_booking(start_time, end_time, event_type, invitee_name, invitee_email, invitee_timezone, invitee_notes, idempotency_key, user):
@@ -29,9 +63,8 @@ class BookingService:
                 else booking.event_type.owner
             )
             BookingAudit.objects.create(action="created", previous_data={}, changed_by=audit_user, booking=booking)
-            transaction.on_commit(
-            lambda: send_booking_confirmation.delay(str(booking.id))
-            )
+            transaction.on_commit(lambda: send_booking_confirmation.delay(str(booking.id)))
+            transaction.on_commit(lambda: BookingService.schedule_booking_reminder(str(booking.id)))
             return booking, True
 
     @staticmethod
@@ -83,3 +116,5 @@ class BookingService:
             transaction.on_commit(
             lambda: send_booking_reschedule.delay(str(booking.id))
             )
+
+   

@@ -5,7 +5,7 @@ from apps.bookings.models import Booking, BookingAudit
 from django.conf import settings
 import logging
 from zoneinfo import ZoneInfo
-from datetime import datetime 
+from datetime import datetime, timedelta 
 
 logger = logging.getLogger(__name__)
 
@@ -166,6 +166,48 @@ def send_booking_reschedule(self, booking_id: str):
             subject="Booking Rescheduled",
             #TODO,
             message=f"{invitee.name} has rescheduled the meeting with you titled {booking.event_type.title} that started initially from {old_start_host} to {old_end_host}. It has been rescheduled from {host_start_time} to {host_end_time} now.",
+            from_email = settings.DEFAULT_FROM_EMAIL,
+            recipient_list = [host.email],
+        )
+    except Exception as exc:
+        self.retry(
+            exc=exc,
+            countdown=60,
+        )
+
+@shared_task(bind=True, max_retries=3)
+def send_booking_reminder(self, booking_id: str, reminder_type: str):
+    try:
+        booking = Booking.objects.select_related('invitee', 'event_type__owner').get(id=booking_id)
+    except Booking.DoesNotExist:
+        logger.warning("Booking %s not found when sending reminder email", booking_id)
+        return
+    
+    if booking.status != "confirmed":
+        return 
+    
+    invitee = booking.invitee
+    host = booking.event_type.owner
+
+    try:
+        send_mail(
+            subject="Booking Reminder",
+            message=f"Your booking with {host.name} titled {booking.event_type.title} is in {reminder_type}. Get ready.",
+            from_email = settings.DEFAULT_FROM_EMAIL,
+            recipient_list = [invitee.email],
+        )
+    
+    except Exception as exc:
+        self.retry(
+            exc=exc,
+            countdown=60,
+        )
+        return 
+    try:
+        send_mail(
+            subject="Booking Reminder",
+            #TODO,
+            message=f"Your booking with {invitee.name} titled {booking.event_type.title} is in {reminder_type}. Get ready.",
             from_email = settings.DEFAULT_FROM_EMAIL,
             recipient_list = [host.email],
         )
