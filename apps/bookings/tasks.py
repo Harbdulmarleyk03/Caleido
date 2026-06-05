@@ -5,7 +5,8 @@ from apps.bookings.models import Booking, BookingAudit
 from django.conf import settings
 import logging
 from zoneinfo import ZoneInfo
-from datetime import datetime, timedelta 
+from datetime import datetime
+from config.celery import app
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +142,12 @@ def send_booking_reschedule(self, booking_id: str):
     else:
         old_start_invitee = old_end_invitee = "unknown"
         old_start_host = old_end_host = "unknown"
+
+    old_24h_task_id = booking.reminder_24h_task_id
+    old_1h_task_id = booking.reminder_1h_task_id
+    app.control.revoke(old_24h_task_id, terminate=False)
+    app.control.revoke(old_1h_task_id, terminate=False)
+
 
     token = generate_cancel_token(booking)
 
