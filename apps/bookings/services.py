@@ -1,7 +1,7 @@
 from apps.bookings.models import Booking, Invitee, BookingAudit
 from django.db import IntegrityError, transaction
 from common.exceptions import ConflictError
-from apps.bookings.tasks import send_booking_confirmation, send_booking_cancellation, send_booking_reschedule, send_booking_reminder
+from apps.bookings.tasks import send_booking_confirmation_email, send_booking_cancellation_email, send_booking_reschedule_email, send_booking_reminder_email
 from config.celery import app 
 from datetime import timedelta
 from django.utils import timezone
@@ -19,13 +19,13 @@ class BookingService:
         result_1h = None
 
         if reminder_24h_eta > timezone.now():
-            result_24h = send_booking_reminder.apply_async(
+            result_24h = send_booking_reminder_email.apply_async(
                 args=[str(booking.id), "24h"],
                 eta=reminder_24h_eta,
             )
 
         if reminder_1h_eta > timezone.now():
-            result_1h = send_booking_reminder.apply_async(
+            result_1h = send_booking_reminder_email.apply_async(
                 args=[str(booking.id), "1h"],
                 eta=reminder_1h_eta,
             )
@@ -64,7 +64,7 @@ class BookingService:
                 else booking.event_type.owner
             )
             BookingAudit.objects.create(action="created", previous_data={}, changed_by=audit_user, booking=booking)
-            transaction.on_commit(lambda: send_booking_confirmation.delay(str(booking.id)))
+            transaction.on_commit(lambda: send_booking_confirmation_email.delay(str(booking.id)))
             transaction.on_commit(lambda: BookingService.schedule_booking_reminder(str(booking.id)))
             return booking, True
 
@@ -92,7 +92,7 @@ class BookingService:
             BookingAudit.objects.create(action="cancelled", previous_data=previous, changed_by=audit_user, booking=booking)
             transaction.on_commit(lambda: app.control.revoke(task_id_24h, terminate=False) if task_id_24h else None)
             transaction.on_commit(lambda: app.control.revoke(task_id_1h, terminate=False) if task_id_1h else None)
-            transaction.on_commit(lambda: send_booking_cancellation.delay(str(booking.id)))
+            transaction.on_commit(lambda: send_booking_cancellation_email.delay(str(booking.id)))
        
     @staticmethod
     def reschedule_booking(booking, user, start_time, end_time):
@@ -123,6 +123,6 @@ class BookingService:
             transaction.on_commit(lambda: app.control.revoke(old_24h_task_id, terminate=False) if old_24h_task_id else None)
             transaction.on_commit(lambda: app.control.revoke(old_1h_task_id, terminate=False) if old_1h_task_id else None)
             transaction.on_commit(lambda: BookingService.schedule_booking_reminder(str(booking.id)))
-            transaction.on_commit(lambda: send_booking_reschedule.delay(str(booking.id)))
+            transaction.on_commit(lambda: send_booking_reschedule_email.delay(str(booking.id)))
 
           

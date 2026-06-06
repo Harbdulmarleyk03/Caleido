@@ -37,7 +37,7 @@ def send_host_confirmation_email(booking_id):
     )
     
 @shared_task(bind=True, max_retries=3)
-def send_booking_confirmation(self, booking_id: str):
+def send_booking_confirmation_email(self, booking_id: str):
     try:
         booking = Booking.objects.select_related('invitee', 'event_type__owner').get(id=booking_id)
     except Booking.DoesNotExist:
@@ -67,7 +67,7 @@ def send_booking_confirmation(self, booking_id: str):
         )
         
 @shared_task(bind=True, max_retries=3)
-def send_booking_cancellation(self, booking_id: str):
+def send_booking_cancellation_email(self, booking_id: str):
     try:
         booking = Booking.objects.select_related('invitee', 'event_type__owner').get(id=booking_id)
     except Booking.DoesNotExist:
@@ -111,7 +111,7 @@ def send_booking_cancellation(self, booking_id: str):
         )
         
 @shared_task(bind=True, max_retries=3)
-def send_booking_reschedule(self, booking_id: str):
+def send_booking_reschedule_email(self, booking_id: str):
     try:
         booking = Booking.objects.select_related('invitee', 'event_type__owner').get(id=booking_id)
     except Booking.DoesNotExist:
@@ -183,7 +183,7 @@ def send_booking_reschedule(self, booking_id: str):
         )
 
 @shared_task(bind=True, max_retries=3)
-def send_booking_reminder(self, booking_id: str, reminder_type: str):
+def send_booking_reminder_email(self, booking_id: str, reminder_type: str):
     try:
         booking = Booking.objects.select_related('invitee', 'event_type__owner').get(id=booking_id)
     except Booking.DoesNotExist:
