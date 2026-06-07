@@ -2,7 +2,9 @@ import pytest
 from apps.users.tests.factories import UserFactory
 from apps.events.models import EventType
 from apps.bookings.models import Booking
-
+from datetime import timedelta
+from django.utils import timezone
+from apps.bookings.tests.factories import InviteeFactory, BookingFactory
 
 @pytest.fixture
 def event_type(owner):
@@ -20,21 +22,15 @@ def event_type(owner):
     )
 
 @pytest.fixture
-def invitee(db): # invitee 
-    return UserFactory(is_verified=True)
-
-@pytest.fixture
-def booking(invitee, event_type):
-    return Booking.objects.create(
-        event_type=event_type,
-        assigned_to=invitee,
-        start_time='',
-        end_time='',
+def booking_with_invitee(owner, event_type):
+    booking = BookingFactory(
         status='confirmed',
-        idempotency_key='',
-        reminder_24h_task_id='',
-        reminder_1h_task_id=''
+        event_type=event_type,
+        start_time=timezone.now() + timedelta(days=2),
+        end_time=timezone.now() + timedelta(days=2, hours=1)
     )
+    InviteeFactory(booking=booking)
+    return booking 
 
 @pytest.fixture
 def auth_client(api_client, owner): # event type owner

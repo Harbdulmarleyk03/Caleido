@@ -1,6 +1,6 @@
 import pytest 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 class TestBookingService:
 
     def test_create_booking():
