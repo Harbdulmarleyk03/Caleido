@@ -18,7 +18,7 @@ def send_invitee_confirmation_email(booking_id, cancel_url):
 
     send_mail(
         subject="Booking Confirmed",
-        message=f"Your booking with {host.name} is confirmed. The event named {booking.event_type.title} will start by {invitee_time}. To cancel your booking, click here: {cancel_url}",
+        message=f"Your booking with {host.get_full_name()} is confirmed. The event named {booking.event_type.title} will start by {invitee_time}. To cancel your booking, click here: {cancel_url}",
         from_email = settings.DEFAULT_FROM_EMAIL,
         recipient_list = [invitee.email],
     )
@@ -85,7 +85,7 @@ def send_booking_cancellation_email(self, booking_id: str):
     try:
         send_mail(
             subject="Booking Cancelled",
-            message=f"Your booking with {host.name} titled {booking.event_type.title} by {invitee_time} has been cancelled.",
+            message=f"Your booking with {host.get_full_name()} titled {booking.event_type.title} by {invitee_time} has been cancelled.",
             from_email = settings.DEFAULT_FROM_EMAIL,
             recipient_list = [invitee.email],
         )
@@ -156,7 +156,7 @@ def send_booking_reschedule_email(self, booking_id: str):
     try:
         send_mail(
             subject="Booking Rescheduled",
-            message=f"Your booking with {host.name} is rescheduled. The event named {booking.event_type.title} is longer in the space of {old_start_invitee} to {old_end_invitee} but in the space of {invitee_start_time} to {invitee_end_time}. To cancel your booking, click here: {cancel_url}",
+            message=f"Your booking with {host.get_full_name()} is rescheduled. The event named {booking.event_type.title} is longer in the space of {old_start_invitee} to {old_end_invitee} but in the space of {invitee_start_time} to {invitee_end_time}. To cancel your booking, click here: {cancel_url}",
             from_email = settings.DEFAULT_FROM_EMAIL,
             recipient_list = [invitee.email],
         )
@@ -199,7 +199,7 @@ def send_booking_reminder_email(self, booking_id: str, reminder_type: str):
     try:
         send_mail(
             subject="Booking Reminder",
-            message=f"Your booking with {host.name} titled {booking.event_type.title} is in {reminder_type}. Get ready.",
+            message=f"Your booking with {host.get_full_name()} titled {booking.event_type.title} is in {reminder_type}. Get ready.",
             from_email = settings.DEFAULT_FROM_EMAIL,
             recipient_list = [invitee.email],
         )
