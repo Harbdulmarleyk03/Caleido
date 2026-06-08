@@ -1,7 +1,5 @@
 import pytest 
-from apps.users.tests.factories import UserFactory
 from apps.events.models import EventType
-from apps.bookings.models import Booking
 from datetime import timedelta
 from django.utils import timezone
 from apps.bookings.tests.factories import InviteeFactory, BookingFactory
