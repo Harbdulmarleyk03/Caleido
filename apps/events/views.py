@@ -1,6 +1,4 @@
 from datetime import datetime
-from urllib import request
-
 from apps.events.models import EventType, AvailabilityRule, DateOverride
 from rest_framework import viewsets, status, generics   
 from rest_framework.response import Response 
@@ -18,6 +16,7 @@ from apps.events.slot_engine import generate_slots
 from apps.bookings.models import Booking
 from rest_framework.exceptions import ValidationError
 import pytz 
+from apps.events.services.slot_cache_service import SlotService
 
 # Event Type Views
 class EventTypeViewSet(viewsets.ModelViewSet):

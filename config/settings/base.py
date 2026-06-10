@@ -134,6 +134,11 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': env('REDIS_URL'),
+          "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "IGNORE_EXCEPTIONS": True,
+        },
+        "TIMEOUT": 300,
     }
 }
 
