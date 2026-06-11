@@ -16,7 +16,7 @@ from apps.events.slot_engine import generate_slots
 from apps.bookings.models import Booking
 from rest_framework.exceptions import ValidationError
 import pytz 
-from apps.events.services.slot_cache_service import SlotService
+from apps.events.services.slot_cache_service import SlotCacheService
 
 # Event Type Views
 class EventTypeViewSet(viewsets.ModelViewSet):
@@ -174,19 +174,23 @@ class SlotListView(APIView):
         if timezone not in pytz.all_timezones:
             raise ValidationError({'timezone': 'Invalid timezone'})
         event_type = get_object_or_404(EventType, pk=event_type_id, is_active=True)
-        rules = AvailabilityRule.objects.filter(event_type=event_type).values()
-        overrides = DateOverride.objects.filter(event_type=event_type).values()
-        bookings = Booking.objects.filter(event_type=event_type, status='confirmed', start_time__date=target_date).values('start_time', 'end_time')
-        duration = event_type.duration_minutes
-        buffer_before = event_type.buffer_before_min
-        buffer_after = event_type.buffer_after_min
-        min_notice_hours = event_type.min_notice_hours
-        max_future_days = event_type.max_future_days
+        def compute():
+            rules = AvailabilityRule.objects.filter(event_type=event_type).values()
+            overrides = DateOverride.objects.filter(event_type=event_type).values()
+            bookings = Booking.objects.filter(event_type=event_type, status='confirmed', start_time__date=target_date).values('start_time', 'end_time')
+            duration = event_type.duration_minutes
+            buffer_before = event_type.buffer_before_min
+            buffer_after = event_type.buffer_after_min
+            min_notice_hours = event_type.min_notice_hours
+            max_future_days = event_type.max_future_days
+            owner_timezone = event_type.owner.timezone
+            now = datetime.now(pytz.UTC)
+            return generate_slots(rules, overrides, bookings, target_date, timezone,
+                                duration, buffer_before, buffer_after, min_notice_hours, 
+                                max_future_days, owner_timezone, now)
         owner_timezone = event_type.owner.timezone
-        now = datetime.now(pytz.UTC)
-        slots = generate_slots(rules, overrides, bookings, target_date, timezone,
-                               duration, buffer_before, buffer_after, min_notice_hours, 
-                               max_future_days, owner_timezone, now)
+        slots = SlotCacheService.get_slots(event_type_id=event_type_id, date=target_date.isoformat(), 
+                                                  timezone=owner_timezone, generate_slots=compute)
         response = Response({'slots': slots})
         response['Cache-Control'] = 'public, max-age=60'
         return response
