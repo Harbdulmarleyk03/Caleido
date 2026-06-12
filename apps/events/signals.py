@@ -3,7 +3,7 @@ from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.core.cache import cache
 from apps.bookings.models import Booking
-from apps.events.cache_keys import build_slot_cache_key
+from apps.events.cache import build_slot_cache_key
 from apps.bookings.models import BookingAudit
 from datetime import datetime
 

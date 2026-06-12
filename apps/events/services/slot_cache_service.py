@@ -1,6 +1,6 @@
 import logging
 from django.core.cache import cache
-from apps.events.cache_keys import build_slot_cache_key
+from apps.events.cache import build_slot_cache_key
 logger = logging.getLogger(__name__)
 
 CACHE_TIMEOUT = 60
