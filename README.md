@@ -1,6 +1,6 @@
 # Caleido 
 
-High-Concurrency Appointment Scheduling System
+A production-ready scheduling API built with Django REST Framework, replicating core Calendly functionality including booking management, JWT authentication, calendar integration, async notifications, and Stripe payment processing.
 
 ## Project Status
 
