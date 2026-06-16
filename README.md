@@ -1,9 +1,6 @@
-# Caleido - Calendly Clone 
+# Caleido 
 
-A production-ready scheduling API built with Django REST Framework,
-replicating core Calendly functionality including booking management,
-JWT authentication, calendar integration, async notifications,
-and Stripe payment processing.
+A production-ready scheduling API built with Django REST Framework, replicating core Calendly functionality including booking management, JWT authentication, calendar integration, async notifications, and Stripe payment processing.
 
 ## Project Status
 
@@ -15,8 +12,8 @@ Currently in active development — Week 7 of a 12-week build.
 | Week 3-4: Authentication and User Management | Done |
 | Week 5-6: Event Types and Booking Engine | Done |
 | Week 7-8: Notifications and Calendar Integration | In Progress |
-| Week 9-10: Advanced Features and Payments | Upcoming |
-| Week 11-12: Performance and Deployment | Upcoming |
+|
+| Week 9-10: Performance and Deployment | Upcoming |
 
 ## What This Project Demonstrates
 
