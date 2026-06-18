@@ -1,116 +1,205 @@
-# Caleido 
+# Caleido
 
-A production-ready scheduling API built with Django REST Framework, replicating core Calendly functionality including booking management, JWT authentication, calendar integration, async notifications, and Stripe payment processing.
+A production-focused scheduling API inspired by Calendly, built with Django REST Framework.
+
+The project focuses on backend engineering fundamentals including authentication, transactional consistency, concurrency control, asynchronous processing, caching, and calendar interoperability.
 
 ## Project Status
 
-Currently in active development — Week 7 of a 12-week build.
+Currently in active development — Day 40 of a 49-day production engineering roadmap.
 
-| Phase | Status |
-|---|---|
-| Week 1-2: Foundation and Infrastructure | Done |
-| Week 3-4: Authentication and User Management | Done |
-| Week 5-6: Event Types and Booking Engine | Done |
-| Week 7-8: Notifications and Calendar Integration | In Progress |
-|
-| Week 9-10: Performance and Deployment | Upcoming |
+### Completed
 
-## What This Project Demonstrates
+* Foundation & Infrastructure
+* Authentication & User Management
+* Event Types & Availability Management
+* Slot Generation Engine
+* Booking System
+* Async Processing with Celery
+* Redis Caching & Idempotency
 
-- JWT authentication with RS256 signing, token rotation,
-  and blacklisting via SimpleJWT
-- Booking engine with SELECT FOR UPDATE to prevent
-  double-booking race conditions under concurrent requests
-- Pure function slot generation engine with zero ORM
-  dependency — fully unit-testable
-- Celery named queues isolating email, calendar sync,
-  and webhook delivery
-- 18-table PostgreSQL schema with constraints and
-  optimised indexes
-- Stripe webhook handling with HMAC verification
-  and idempotency protection
-- Docker, GitHub Actions CI, health checks
+### Currently Building
+
+* iCal Export (Calendar Integration)
+
+### Upcoming
+
+* Performance Optimisation
+* Infrastructure & CI/CD
+* Observability
+* Documentation
+
+---
+
+## Engineering Highlights
+
+* JWT authentication using RS256 signing
+* Refresh token rotation and blacklisting
+* Transaction-safe booking creation using SELECT FOR UPDATE
+* Redis-backed idempotency protection
+* Pure Python slot generation engine with zero ORM dependency
+* Async email processing with Celery
+* Scheduled reminder system with task revocation support
+* PostgreSQL relational schema with constraints and indexes
+* Comprehensive automated test suite
+
+---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| API Framework | Django REST Framework |
-| Language | Python 3.12 |
-| Database | PostgreSQL 16 |
-| Cache / Broker | Redis 7 |
-| Async Tasks | Celery + django-celery-beat |
-| Authentication | SimpleJWT (RS256) |
-| Payments | Stripe |
-| Email | SendGrid via django-anymail |
-| Containers | Docker + docker-compose |
-| CI/CD | GitHub Actions |
+| Layer             | Technology            |
+| ----------------- | --------------------- |
+| API Framework     | Django REST Framework |
+| Language          | Python 3.12           |
+| Database          | PostgreSQL            |
+| Cache / Broker    | Redis                 |
+| Async Tasks       | Celery                |
+| Authentication    | SimpleJWT (RS256)     |
+| Email             | SendGrid              |
+| Testing           | pytest                |
+| API Documentation | drf-spectacular       |
 
-## Local Setup
+---
 
-### Prerequisites
-- Python 3.12
-- PostgreSQL 16
-- Redis 7
+## Architecture Decisions
 
-### Run Locally
-git clone https://github.com/Harbdulmarleyk03/caleido
-cd caleido
-cp .env.example .env
-pip install -r requirements/development.txt
-python manage.py migrate
-python manage.py runserver
+### Preventing Double Booking
 
-## Architecture
+Bookings are created inside database transactions using row-level locking (SELECT FOR UPDATE) to guarantee consistency under concurrent requests.
 
-```mermaid
-graph TB
-    subgraph Client
-        Browser["Browser / Mobile"]
-        CalApp["Calendar App iCal"]
-    end
-    subgraph Django["Django 5 + DRF"]
-        Auth["Auth JWT · OAuth"]
-        Events["Events Slots · Availability"]
-        Bookings["Bookings Create · Cancel · Reschedule"]
-        Analytics["Analytics"]
-    end
-    subgraph Async["Celery"]
-        Worker["Worker Emails · Reminders"]
-        Beat["Beat Scheduler"]
-    end
-    subgraph Storage
-        Postgres[("PostgreSQL")]
-        Redis[("Redis Cache · Broker")]
-    end
-    subgraph External
-        Google["Google OAuth"]
-        SMTP["SendGrid"]
-        Sentry["Sentry"]
-    end
-    Browser --> Auth
-    Browser --> Events
-    Browser --> Bookings
-    Auth --> Google
-    Auth --> Postgres
-    Events --> Postgres
-    Events --> Redis
-    Bookings --> Postgres
-    Bookings --> Redis
-    Bookings --> Worker
-    Worker --> SMTP
-    Worker <--> Redis
-    Beat --> Worker
-    Django --> Sentry
-```
-    
+### Pure Slot Engine
+
+Slot generation logic is implemented as pure Python functions with no ORM dependency, making it highly testable and reusable.
+
+### Async Notifications
+
+Booking confirmations, cancellations, and reminders are processed asynchronously through Celery workers to keep API response times low.
+
+### Idempotent Requests
+
+Redis-backed idempotency keys prevent duplicate booking creation caused by retries or network failures.
+
+---
+
+## Core Features
+
+### Authentication
+
+* User Registration
+* Login & Logout
+* JWT Authentication
+* Refresh Token Rotation
+* Token Blacklisting
+* Email Verification
+* Password Reset
+* Google OAuth
+
+### Scheduling
+
+* Event Type Management
+* Availability Rules
+* Date Overrides
+* Timezone-Aware Slot Generation
+* DST Handling
+
+### Booking Management
+
+* Create Booking
+* List Bookings
+* Cancel Booking
+* Reschedule Booking
+* Concurrency Protection
+* Idempotency Protection
+
+### Notifications
+
+* Booking Confirmation Emails
+* Cancellation Emails
+* Reschedule Emails
+* Scheduled Reminders
+
+### Caching
+
+* Slot Caching
+* Analytics Caching
+* Redis-backed Idempotency
+
+---
+
 ## API Documentation
 
-Swagger UI available at /api/docs/ when running locally.
-Full OpenAPI 3 schema auto-generated by drf-spectacular.
+Swagger UI available at:
+
+/api/docs/
+
+OpenAPI schema is generated automatically using drf-spectacular.
+
+---
+
+## Local Development
+
+### Prerequisites
+
+* Python 3.12
+* PostgreSQL
+* Redis
+
+### Run Locally
+
+```bash
+git clone https://github.com/Harbdulmarleyk03/Caleido.git
+
+cd Caleido
+
+cp .env.example .env
+
+pip install -r requirements/development.txt
+
+python manage.py migrate
+
+python manage.py runserver
+```
+
+---
+
+## Roadmap
+
+### In Progress
+
+* iCal Export
+
+### Planned
+
+* Query Performance Optimisation
+* Cursor Pagination
+* Health Check Endpoints
+* Dockerisation
+* GitHub Actions CI
+* Sentry Integration
+* OpenAPI Documentation Improvements
+
+---
+
+## What I'd Build Next
+
+* Google Calendar Synchronisation
+* Outlook Calendar Integration
+* Team Scheduling
+* Round-Robin Booking
+* Webhook Subscriptions
+* Multi-Tenant Organisations
+* Analytics Dashboard
+
+---
 
 ## Author
 
-Adebayo Abdulmalik — Backend Engineer
-LinkedIn: linkedin.com/in/abdulmalik-adebayo
-GitHub: github.com/Harbdulmarleyk03
+Adebayo Abdulmalik
+
+Backend Engineer
+
+GitHub:
+https://github.com/Harbdulmarleyk03
+
+LinkedIn:
+https://linkedin.com/in/abdulmalik-adebayo
