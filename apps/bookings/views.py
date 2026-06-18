@@ -12,6 +12,10 @@ from common.pagination import BookmarkCursorPagination
 from apps.bookings.permissions import CancelBookingPermission, RescheduleBookingPermission
 from datetime import timedelta
 from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from django.http import HttpResponse
+from django.core.exceptions import PermissionDenied
+from apps.bookings.ical import IcalExportService
 
 class BookingViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -81,3 +85,15 @@ class BookingViewSet(viewsets.ModelViewSet):
         end_time = start_time + timedelta(minutes=booking.event_type.duration_minutes)
         BookingService.reschedule_booking(booking=booking, user=request.user, start_time=start_time, end_time=end_time)
         return Response({'status': 'Rescheduled'}, status=status.HTTP_200_OK)
+
+class BookingIcalView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, booking_id):
+        booking = get_object_or_404(Booking.objects.select_related('event_type', 'invitee'), id=booking_id)
+        if booking.event_type.owner != request.user:
+            raise PermissionDenied("You do not have permission to access this booking.")
+        ical_content = IcalExportService.generate_booking_ical(booking)
+        response = HttpResponse(ical_content, content_type='text/calendar')
+        response['Content-Disposition'] = f'attachment; filename=booking_{booking.id}.ics'
+        return response

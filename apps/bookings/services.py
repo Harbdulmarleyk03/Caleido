@@ -124,5 +124,3 @@ class BookingService:
             transaction.on_commit(lambda: app.control.revoke(old_1h_task_id, terminate=False) if old_1h_task_id else None)
             transaction.on_commit(lambda: BookingService.schedule_booking_reminder(str(booking.id)))
             transaction.on_commit(lambda: send_booking_reschedule_email.delay(str(booking.id)))
-
-          

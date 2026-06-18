@@ -10,6 +10,8 @@ DATABASES = {
     }
 }
 
+ICAL_UID_DOMAIN = "test.caleido.com"  # Domain used for generating unique identifiers in iCal files
+
 MIGRATION_MODULES = {}  # use real migrations, not mocked ones
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
