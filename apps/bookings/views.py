@@ -69,14 +69,14 @@ class BookingViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'], url_path='cancel', permission_classes=[CancelBookingPermission])
     def cancel(self, request, pk=None):
         token = request.data.get('token') or request.query_params.get('token')
-        booking = get_object_or_404(Booking, pk=pk)
+        booking = get_object_or_404(Booking.objects.select_related('event_type'), pk=pk)        
         self.check_object_permissions(request, booking)
         BookingService.cancel_booking(booking=booking, user=request.user)
         return Response({'status': 'Cancelled'}, status=status.HTTP_200_OK)
     
     @action(detail=True, methods=['patch'], url_path='reschedule', permission_classes=[RescheduleBookingPermission])
     def reschedule(self, request, pk=None):
-        booking = get_object_or_404(Booking, pk=pk)
+        booking = get_object_or_404(Booking.objects.select_related('event_type'), pk=pk)
         self.check_object_permissions(request, booking)
         serializer = RescheduleBookingSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -90,7 +90,7 @@ class BookingIcalView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, booking_id):
-        booking = get_object_or_404(Booking.objects.select_related('event_type', 'invitee'), id=booking_id)
+        booking = get_object_or_404(Booking.objects.select_related('event_type__owner', 'invitee'), id=booking_id)
         if booking.event_type.owner != request.user:
             raise PermissionDenied("You do not have permission to access this booking.")
         ical_content = IcalExportService.generate_booking_ical(booking)

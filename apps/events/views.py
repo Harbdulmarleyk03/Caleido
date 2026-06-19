@@ -109,8 +109,7 @@ class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
         return context
 
     def get_queryset(self):
-        return AvailabilityRule.objects.filter(event_type=self.get_event_type()).select_related('event_type', 'event_type__owner')
-
+        return AvailabilityRule.objects.filter(event_type=self.get_event_type())
     def perform_create(self, serializer):
         AvailabilityRuleService.create_availability_rule(
             event_type=self.get_event_type(),
@@ -143,7 +142,7 @@ class DateOverrideListCreateView(generics.ListCreateAPIView):
         return context
 
     def get_queryset(self):
-        return DateOverride.objects.filter(event_type=self.get_event_type()).select_related('event_type', 'event_type__owner')
+        return DateOverride.objects.filter(event_type=self.get_event_type())
 
     def perform_create(self, serializer):
         DateOverrideService.create_date_override(
@@ -173,7 +172,7 @@ class SlotListView(APIView):
         timezone = request.query_params.get('timezone', 'UTC')
         if timezone not in pytz.all_timezones:
             raise ValidationError({'timezone': 'Invalid timezone'})
-        event_type = get_object_or_404(EventType, pk=event_type_id, is_active=True)
+        event_type = get_object_or_404(EventType.objects.select_related('owner'), pk=event_type_id, is_active=True)        
         def compute():
             rules = AvailabilityRule.objects.filter(event_type=event_type).values()
             overrides = DateOverride.objects.filter(event_type=event_type).values()
