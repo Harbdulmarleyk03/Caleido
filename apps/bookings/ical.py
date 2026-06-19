@@ -1,7 +1,7 @@
 from icalendar import Calendar, Event
 from django.conf import settings
 from pytz import utc
-from datetime import datetime
+from django.utils import timezone
 
 class IcalExportService:
 
@@ -17,7 +17,7 @@ class IcalExportService:
         event.add('dtend', booking.end_time)
         event.add('uid', f"{booking.id}@{settings.ICAL_UID_DOMAIN}")
         event.add('status', 'CONFIRMED' if booking.status == 'confirmed' else 'CANCELLED')
-        event.add('dtstamp', datetime.utcnow().replace(tzinfo=utc))
+        event.add('dtstamp', timezone.now())
 
         calendar.add_component(event)
         ical_content = calendar.to_ical()
