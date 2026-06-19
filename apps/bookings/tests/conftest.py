@@ -27,7 +27,6 @@ def booking_with_invitee(owner, event_type):
         start_time=timezone.now() + timedelta(days=2),
         end_time=timezone.now() + timedelta(days=2, hours=1)
     )
-    InviteeFactory(booking=booking)
     return booking 
 
 @pytest.fixture

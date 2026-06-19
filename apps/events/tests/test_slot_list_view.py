@@ -1,10 +1,11 @@
 import pytest
-from apps.users.tests.factories import UserFactory
 from apps.events.models import EventType, AvailabilityRule
 from django.urls import reverse
 from datetime import time, date, datetime  
 import pytz 
 from apps.bookings.models import Booking
+from django.utils import timezone as tz
+from datetime import timedelta
 
 @pytest.fixture
 def event_type(owner):
@@ -73,15 +74,25 @@ class TestSlotListView:
         assert response.data == {'slots': []}
 
     def test_valid_requests_with_rules(self, auth_client, event_type):
-        url = reverse('event-type-slots', kwargs={'event_type_id': event_type.id})
+        # Find next Friday (day_of_week=4) that is at least 2 days away
+        today = tz.now().date()
+        days_ahead = (4 - today.weekday()) % 7
+        if days_ahead < 2:
+            days_ahead += 7
+        next_friday = today + timedelta(days=days_ahead)
+
         AvailabilityRule.objects.create(
             event_type=event_type,
             day_of_week=4,
             start_time="9:00:00",
             end_time="12:00:00"
         )
-        response = auth_client.get(url, {'date': '2026-06-19', 'timezone': 'Africa/Lagos'})
-        assert response.status_code == 200 
+        url = reverse('event-type-slots', kwargs={'event_type_id': event_type.id})
+        response = auth_client.get(url, {
+            'date': next_friday.isoformat(),
+            'timezone': 'Africa/Lagos',
+        })
+        assert response.status_code == 200
         assert len(response.data['slots']) > 0
             
     def test_existing_booking_blocks_slot(self, auth_client, event_type):
