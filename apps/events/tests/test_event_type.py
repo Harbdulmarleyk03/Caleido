@@ -35,7 +35,7 @@ class TestEventTypeViewSet:
         url = reverse('event-type-list')
         response = auth_client.get(url)
         assert response.status_code == status.HTTP_200_OK
-        returned_ids = [item['id'] for item in response.data]
+        returned_ids = [item['id'] for item in response.data['results']]
         assert str(event_type.id) in returned_ids
 
     def test_list_unauthenticated_user(self, api_client):
@@ -56,8 +56,8 @@ class TestEventTypeViewSet:
         response = auth_client.get(url)
         assert response.status_code == status.HTTP_200_OK
         # Only the owner's event type should appear
-        assert len(response.data) == 1
-        assert response.data[0]['title'] == "My first event type"
+        assert len(response.data['results']) == 1
+        assert response.data['results'][0]['title'] == "My first event type"
 
     def test_create_event_type(self, auth_client, owner):
         url = reverse('event-type-list')
@@ -134,8 +134,8 @@ class TestEventTypeViewSet:
         # Filter active only
         response = auth_client.get(url, {'is_active': 'true'})
         assert response.status_code == status.HTTP_200_OK
-        assert all(item['is_active'] for item in response.data)
+        assert all(item['is_active'] for item in response.data['results'])
         # Filter inactive only
         response = auth_client.get(url, {'is_active': 'false'})
         assert response.status_code == status.HTTP_200_OK
-        assert all(not item['is_active'] for item in response.data)
+        assert all(not item['is_active'] for item in response.data['results'])

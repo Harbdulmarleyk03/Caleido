@@ -20,7 +20,7 @@ from apps.bookings.ical import IcalExportService
 class BookingViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = BookingFilter
-    ordering_fields = ['start_time', 'status']
+    ordering_fields = ['start_time', 'id']
     ordering = ['-start_time']
     pagination_class = BookmarkCursorPagination
 

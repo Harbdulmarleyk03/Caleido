@@ -17,10 +17,12 @@ from apps.bookings.models import Booking
 from rest_framework.exceptions import ValidationError
 import pytz 
 from apps.events.services.slot_cache_service import SlotCacheService
+from common.pagination import AvailabilityRuleCursorPagination, DateOverrideCursorPagination, EventTypeCursorPagination
 
 # Event Type Views
 class EventTypeViewSet(viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
+    pagination_class = EventTypeCursorPagination
 
     def get_permissions(self):
    
@@ -64,6 +66,12 @@ class EventTypeViewSet(viewsets.ModelViewSet):
         is_active = request.query_params.get('is_active')
         if is_active is not None:
             queryset = queryset.filter(is_active=is_active.lower() == 'true')
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -95,6 +103,7 @@ class EventTypeViewSet(viewsets.ModelViewSet):
 class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
+    pagination_class = AvailabilityRuleCursorPagination
 
     def get_event_type(self):
         # Cache on the request cycle so we don't hit the DB twice
@@ -128,6 +137,7 @@ class AvailabilityRuleDetailView(generics.RetrieveDestroyAPIView):
 class DateOverrideListCreateView(generics.ListCreateAPIView):
     serializer_class = DateOverrideSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
+    pagination_class = DateOverrideCursorPagination
 
     def get_event_type(self):
         # Cache on the request cycle so we don't hit the DB twice

@@ -28,7 +28,12 @@ class Booking(AbstractBaseModel):
         indexes = [
             models.Index(
                 fields=["event_type", "start_time", "status"],
-                name="idx_booking_conflict_check")]
+                name="idx_booking_conflict_check"),
+            models.Index(
+                fields=["-start_time", "id"],
+                name="idx_booking_cursor_pagination"
+            ),        
+        ]
 
     def __str__(self):
         return f"Booking {self.id} — {self.status}"
