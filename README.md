@@ -164,13 +164,10 @@ python manage.py runserver
 
 ### In Progress
 
-* iCal Export
+* Health Check Endpoints
 
 ### Planned
 
-* Query Performance Optimisation
-* Cursor Pagination
-* Health Check Endpoints
 * Dockerisation
 * GitHub Actions CI
 * Sentry Integration
