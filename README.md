@@ -20,12 +20,10 @@ Currently in active development — Day 43 of a 49-day production engineering ro
 
 ### Currently Building
 
-* iCal Export (Calendar Integration)
+* Infrastructure & CI/CD
 
 ### Upcoming
 
-* Performance Optimisation
-* Infrastructure & CI/CD
 * Observability
 * Documentation
 
