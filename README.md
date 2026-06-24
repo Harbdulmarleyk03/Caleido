@@ -6,7 +6,7 @@ The project focuses on backend engineering fundamentals including authentication
 
 ## Project Status
 
-Currently in active development — Day 40 of a 49-day production engineering roadmap.
+Currently in active development — Day 43 of a 49-day production engineering roadmap.
 
 ### Completed
 
@@ -20,12 +20,10 @@ Currently in active development — Day 40 of a 49-day production engineering ro
 
 ### Currently Building
 
-* iCal Export (Calendar Integration)
+* Infrastructure & CI/CD
 
 ### Upcoming
 
-* Performance Optimisation
-* Infrastructure & CI/CD
 * Observability
 * Documentation
 
@@ -166,13 +164,10 @@ python manage.py runserver
 
 ### In Progress
 
-* iCal Export
+* Health Check Endpoints
 
 ### Planned
 
-* Query Performance Optimisation
-* Cursor Pagination
-* Health Check Endpoints
 * Dockerisation
 * GitHub Actions CI
 * Sentry Integration
