@@ -1,7 +1,6 @@
 import pytest
 from django.core import mail
 from django.test import override_settings
-from unittest.mock import patch
 from apps.bookings.tasks import send_booking_confirmation_email, send_booking_cancellation_email, send_booking_reschedule_email, send_booking_reminder_email
 import uuid 
 
