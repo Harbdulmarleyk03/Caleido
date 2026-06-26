@@ -224,11 +224,11 @@ class ConflictError(APIException):
 
 class ServiceUnavailableError(APIException):
     """
-    503 Service Unavailable — used when an external service
-    (Google Calendar, Stripe) is down.
+    503 Service Unavailable — used when 
+    Redis, DB, celery is down.
 
     Usage:
-        raise ServiceUnavailableError("Google Calendar is unavailable.")
+        raise ServiceUnavailableError("DB is unavailable.")
     """
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     default_detail = 'Service temporarily unavailable.'

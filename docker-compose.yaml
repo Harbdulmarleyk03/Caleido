@@ -1,0 +1,98 @@
+services:
+  web:
+    build:
+      context: .
+      # Build the development stage from the multi-stage Dockerfile.
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:    
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      # Enable Django's verbose debug error pages (the dev server always auto-reloads).
+      - DEBUG=1
+      # Database connection settings passed to Django via environment variables.
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+    # Wait for the database to pass its healthcheck before starting the web service.
+    depends_on:
+      - redis
+      - db
+
+  db:
+    image: postgres:16
+    restart: always
+    volumes:
+      # Persist database data across container restarts.
+      - db-data:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=myapp
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    # Expose the port only to other services on the Compose network,
+    # not to the host machine.
+    expose:
+      - 5432
+    # Only report healthy once PostgreSQL is ready to accept connections,
+    # so the web service doesn't start before the database is available.
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: redis_broker
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # 3. Celery Worker (Executes the background tasks)
+  celery_worker:
+    build: .
+    command: celery -A config worker --loglevel=info -E
+    volumes:
+      - .:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+
+  # 4. Celery Beat (Schedules periodic/cron tasks)
+  celery_beat:
+    build: .
+    command: celery -A config beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - db
+
+  # 5. Flower (Web UI dashboard to monitor Celery)
+  flower:
+    build: .
+    command: celery -A config flower --port=5555
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - redis
+      - celery_worker
+
+volumes:
+  db-data:
+  redis_data:

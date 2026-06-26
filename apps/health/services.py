@@ -36,7 +36,6 @@ class HealthService:
             raise ServiceUnavailableError("Unable to connect to Redis: Connection Error")    
         if result != probe_key:
             raise ServiceUnavailableError("Redis returned unexpected value")
-       
         
     @staticmethod
     def check_celery():
@@ -50,7 +49,6 @@ class HealthService:
             if not ping_result:
                 raise ServiceUnavailableError("Celery workers unavailable")
             
-
     @staticmethod
     def run_all_check():
         results = {}
