@@ -17,6 +17,8 @@ Currently in active development — Day 43 of a 49-day production engineering ro
 * Booking System
 * Async Processing with Celery
 * Redis Caching & Idempotency
+* Ical Export (Calendar Integration)
+* Performance Optimisation
 
 ### Currently Building
 
@@ -164,11 +166,10 @@ python manage.py runserver
 
 ### In Progress
 
-* Health Check Endpoints
+* Dockerisation
 
 ### Planned
 
-* Dockerisation
 * GitHub Actions CI
 * Sentry Integration
 * OpenAPI Documentation Improvements
