@@ -125,9 +125,16 @@ ROOT_URLCONF = 'config.urls'
 WSGI_APPLICATION = 'config.wsgi.application'
 AUTH_USER_MODEL = 'users.User'  
 
+# Database config
 DATABASES = {
-    'default': env.db('DATABASE_URL')
-    # env.db() automatically parses the URL into Django's dict format
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("POSTGRES_DB"),
+        "USER": env("POSTGRES_USER"),
+        "PASSWORD": env("POSTGRES_PASSWORD"),
+        "HOST": env("POSTGRES_HOST"),
+        "PORT": env("POSTGRES_PORT"),
+    }
 }
 
 CACHES = {
@@ -171,9 +178,6 @@ TEMPLATES = [
     },
 ]
 
-
-DATABASES: dict = {}  # Defined per environment — fails loud if forgotten
-
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -204,7 +208,6 @@ GOOGLE_REDIRECT_URI = env('GOOGLE_REDIRECT_URI', default='http://localhost:8000/
 def validate_settings():
     required = [
         'SECRET_KEY',
-        'DATABASE_URL',
         'REDIS_URL',
     ]
     missing = [key for key in required if not env(key, default=None)]

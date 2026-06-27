@@ -10,18 +10,22 @@ services:
     environment:    
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings.docker
       # Enable Django's verbose debug error pages (the dev server always auto-reloads).
       - DEBUG=1
       # Database connection settings passed to Django via environment variables.
-      - POSTGRES_DB=myapp
+      - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
+      - POSTGRES_PORT=${POSTGRES_PORT}
     # Wait for the database to pass its healthcheck before starting the web service.
     depends_on:
-      - redis
-      - db
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   db:
     image: postgres:16
@@ -30,7 +34,7 @@ services:
       # Persist database data across container restarts.
       - db-data:/var/lib/postgresql
     environment:
-      - POSTGRES_DB=myapp
+      - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     # Expose the port only to other services on the Compose network,
@@ -61,8 +65,15 @@ services:
     volumes:
       - .:/app
     environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+        - CELERY_BROKER_URL=redis://redis:6379/0
+        - CELERY_RESULT_BACKEND=redis://redis:6379/0
+        - REDIS_URL=redis://redis:6379/0
+        - DJANGO_SETTINGS_MODULE=config.settings.docker
+        - POSTGRES_DB=${POSTGRES_DB}        
+        - POSTGRES_USER=${POSTGRES_USER}   
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  
+        - POSTGRES_HOST=db                  
+        - POSTGRES_PORT=${POSTGRES_PORT}   
     depends_on:
       - redis
       - db
@@ -76,10 +87,17 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings.docker
+      - POSTGRES_DB=${POSTGRES_DB}        
+      - POSTGRES_USER=${POSTGRES_USER}   
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  
+      - POSTGRES_HOST=db                  
+      - POSTGRES_PORT=${POSTGRES_PORT}    
     depends_on:
       - redis
       - db
-
+    
   # 5. Flower (Web UI dashboard to monitor Celery)
   flower:
     build: .
@@ -89,6 +107,13 @@ services:
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SETTINGS_MODULE=config.settings.docker
+      - POSTGRES_DB=${POSTGRES_DB}        
+      - POSTGRES_USER=${POSTGRES_USER}   
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}  
+      - POSTGRES_HOST=db                  
+      - POSTGRES_PORT=${POSTGRES_PORT}   
     depends_on:
       - redis
       - celery_worker
