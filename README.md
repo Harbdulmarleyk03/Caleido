@@ -6,7 +6,7 @@ The project focuses on backend engineering fundamentals including authentication
 
 ## Project Status
 
-Currently in active development — Day 43 of a 49-day production engineering roadmap.
+Currently in active development — Day 45 of a 49-day production engineering roadmap.
 
 ### Completed
 
@@ -166,11 +166,10 @@ python manage.py runserver
 
 ### In Progress
 
-* Dockerisation
+* GitHub Actions CI
 
 ### Planned
 
-* GitHub Actions CI
 * Sentry Integration
 * OpenAPI Documentation Improvements
 
