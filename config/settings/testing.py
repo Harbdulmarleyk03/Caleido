@@ -35,3 +35,6 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [],  # disable all throttling in tests
     'DEFAULT_THROTTLE_RATES': {},
 }
+
+CELERY_BROKER_URL = 'memory://'
+CELERY_RESULT_BACKEND = 'cache+memory://'

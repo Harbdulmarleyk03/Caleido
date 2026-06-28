@@ -9,6 +9,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN addgroup --system app && \
     adduser --system --ingroup app app
 
+RUN apt-get update && apt-get install -y postgresql-client && rm -rf /var/lib/apt/lists/*
+
 # Set the working directory
 WORKDIR /app
 

@@ -27,7 +27,9 @@ SECURE_HSTS_PRELOAD = True
 # AWS_STORAGE_BUCKET_NAME = env('AWS_STORAGE_BUCKET_NAME')
 # AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME', default='us-east-1')
 
-# Sentry error tracking
+
+"""
+    # Sentry error tracking
 SENTRY_DSN = env('SENTRY_DSN', default='')
 if SENTRY_DSN:
     sentry_sdk.init(
@@ -35,4 +37,5 @@ if SENTRY_DSN:
         integrations=[DjangoIntegration()],
         traces_sample_rate=0.2,
         send_default_pii=False,   # never send PII to Sentry
-    )
+    ) 
+    """
