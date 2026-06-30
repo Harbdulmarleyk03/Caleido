@@ -64,6 +64,21 @@ jobs:
       - name: Run tests with coverage
         env:
           DJANGO_SETTINGS_MODULE: config.settings.testing
+          SECRET_KEY: ci-test-secret-key
+          ALLOWED_HOSTS: localhost,127.0.0.1
+          POSTGRES_DB: caleido
+          POSTGRES_USER: caleido_user
+          POSTGRES_PASSWORD: ci-dummy-password
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: "5432"
+          REDIS_URL: redis://localhost:6379/0
+          EMAIL_BACKEND: django.core.mail.backends.locmem.EmailBackend
+          EMAIL_HOST: localhost
+          EMAIL_HOST_USER: ci@example.com
+          EMAIL_HOST_PASSWORD: ci-dummy-password
+          DEFAULT_FROM_EMAIL: ci@example.com
+          GOOGLE_CLIENT_ID: ci-dummy-client-id
+          GOOGLE_CLIENT_SECRET: ci-dummy-client-secret
         run: |
           pytest --cov=apps --cov=common --cov-report=term-missing --cov-fail-under=80
       
