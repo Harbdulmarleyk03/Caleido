@@ -9,7 +9,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    # NOTE: testing.py uses SQLite/LocMemCache/memory broker exclusively.
+    # These services are not currently consumed by pytest — kept for future
+    # integration testing against real Postgres/Redis (e.g. docker-compose verification).
     services:
       postgres:
         image: postgres:16
@@ -48,7 +50,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements/base.txt
-          pip install -r requirements/dev.txt
+          pip install -r requirements/development.txt
 
       - name: Lint with ruff
         run: ruff check .
