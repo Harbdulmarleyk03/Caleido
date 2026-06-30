@@ -36,8 +36,8 @@ class TestIcalExportService:
         ical_content = IcalExportService.generate_booking_ical(booking)
         cal = Calendar.from_ical(ical_content)
         vevent = next(c for c in cal.walk() if c.name == "VEVENT")
-        assert vevent.get("dtstart").dt == booking.start_time
-        assert vevent.get("dtend").dt == booking.end_time
+        assert vevent.get("dtstart").dt == booking.start_time.replace(microsecond=0)
+        assert vevent.get("dtend").dt == booking.end_time.replace(microsecond=0)
 
     def test_ical_contains_uid(self, owner):
         event_type = EventTypeFactory(owner=owner)
