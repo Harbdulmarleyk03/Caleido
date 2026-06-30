@@ -57,3 +57,9 @@ jobs:
 
       - name: Check formatting with black
         run: black --check .
+
+      - name: Run tests with coverage
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.testing
+        run: |
+          pytest --cov=apps --cov=common --cov-report=term-missing --cov-fail-under=80
