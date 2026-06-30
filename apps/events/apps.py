@@ -1,7 +1,9 @@
 from django.apps import AppConfig
 
+
 class EventsConfig(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = 'apps.events'
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.events"
+
     def ready(self):
-        pass
+        import apps.events.signals  # noqa: F401
