@@ -32,7 +32,7 @@ class HealthService:
         try:
             cache.set(probe_key, probe_key, timeout=settings.HEALTH_CHECK_TIMEOUTS['REDIS']) 
             result = cache.get(probe_key)
-        except:
+        except Exception:
             raise ServiceUnavailableError("Unable to connect to Redis: Connection Error")    
         if result != probe_key:
             raise ServiceUnavailableError("Redis returned unexpected value")

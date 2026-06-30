@@ -108,7 +108,7 @@ class TokenRefreshView(APIView):
             access_token = str(token.access_token)
             token.blacklist()
             return Response({'new_access': str(access_token), 'new_refresh': str(token)}, status=status.HTTP_200_OK)
-        except:
+        except Exception:
             return Response({'error': 'Invalid/expired token'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class LogoutView(APIView):
