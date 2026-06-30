@@ -210,7 +210,6 @@ GOOGLE_REDIRECT_URI = env(
 def validate_settings():
     required = [
         "SECRET_KEY",
-        "REDIS_URL",
     ]
     missing = [key for key in required if not env(key, default=None)]
     if missing:
