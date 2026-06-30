@@ -64,7 +64,7 @@ jobs:
       - name: Run tests with coverage
         env:
           DJANGO_SETTINGS_MODULE: config.settings.testing
-          SECRET_KEY: ci-test-secret-key
+          SECRET_KEY: ci-test-secret-key-minimum-32-chars-ok
           ALLOWED_HOSTS: localhost,127.0.0.1
           POSTGRES_DB: caleido
           POSTGRES_USER: caleido_user
