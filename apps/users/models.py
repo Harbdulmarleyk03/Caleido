@@ -25,8 +25,10 @@ class User(AbstractUser):
 
 class OAuthProvider(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="oauth_providers", db_index=True)
-    provider = models.CharField(max_length=30)           # e.g. 'google'
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="oauth_providers", db_index=True
+    )
+    provider = models.CharField(max_length=30)  # e.g. 'google'
     provider_uid = models.CharField(max_length=255)
     access_token_enc = models.TextField()
     refresh_token_enc = models.TextField(blank=True, null=True)
@@ -42,7 +44,9 @@ class OAuthProvider(models.Model):
 
 class OutstandingToken(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="outstanding_tokens", db_index=True)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="outstanding_tokens", db_index=True
+    )
     jti = models.CharField(max_length=255, unique=True)  # JWT ID claim
     token = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -57,7 +61,9 @@ class OutstandingToken(models.Model):
 
 class BlacklistedToken(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    token = models.OneToOneField(OutstandingToken, on_delete=models.CASCADE, related_name="blacklisted")
+    token = models.OneToOneField(
+        OutstandingToken, on_delete=models.CASCADE, related_name="blacklisted"
+    )
     blacklisted_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

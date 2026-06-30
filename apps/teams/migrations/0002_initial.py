@@ -10,28 +10,42 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('teams', '0001_initial'),
+        ("teams", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='team',
-            name='owner',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='owned_teams', to=settings.AUTH_USER_MODEL),
+            model_name="team",
+            name="owner",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="owned_teams",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='teammembership',
-            name='team',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to='teams.team'),
+            model_name="teammembership",
+            name="team",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="memberships",
+                to="teams.team",
+            ),
         ),
         migrations.AddField(
-            model_name='teammembership',
-            name='user',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='team_memberships', to=settings.AUTH_USER_MODEL),
+            model_name="teammembership",
+            name="user",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="team_memberships",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddConstraint(
-            model_name='teammembership',
-            constraint=models.UniqueConstraint(fields=('team', 'user'), name='unique_team_user'),
+            model_name="teammembership",
+            constraint=models.UniqueConstraint(
+                fields=("team", "user"), name="unique_team_user"
+            ),
         ),
     ]

@@ -1,47 +1,58 @@
 from datetime import date, datetime, timedelta
-import pytz 
+import pytz
+
 
 def get_availability_window(rules, target_date: date, owner_timezone: str):
     tz = pytz.timezone(owner_timezone)
 
     for rule in rules:
-        if rule['day_of_week'] == target_date.weekday():
+        if rule["day_of_week"] == target_date.weekday():
             # Combine date + time, localize to owner tz, then convert to UTC
             try:
-                start_local = tz.localize(datetime.combine(target_date, rule['start_time']))
-                end_local = tz.localize(datetime.combine(target_date, rule['end_time']))
+                start_local = tz.localize(
+                    datetime.combine(target_date, rule["start_time"])
+                )
+                end_local = tz.localize(datetime.combine(target_date, rule["end_time"]))
             except (pytz.AmbiguousTimeError, pytz.NonExistentTimeError):
                 return None, None
-            
+
             if end_local <= start_local:
-                    end_local += timedelta(days=1)
+                end_local += timedelta(days=1)
 
             return start_local.astimezone(pytz.UTC), end_local.astimezone(pytz.UTC)
-        
+
     return None, None
-    
+
+
 def apply_date_override(overrides, date, owner_timezone: str):
     tz = pytz.timezone(owner_timezone)
 
     for override in overrides:
-        if override['specific_date'] != date:
+        if override["specific_date"] != date:
             continue
-        if not override['is_unavailable']: 
+        if not override["is_unavailable"]:
             try:
-                custom_start_local = tz.localize(datetime.combine(date, override['custom_start']))
-                custom_end_local = tz.localize(datetime.combine(date, override['custom_end']))
+                custom_start_local = tz.localize(
+                    datetime.combine(date, override["custom_start"])
+                )
+                custom_end_local = tz.localize(
+                    datetime.combine(date, override["custom_end"])
+                )
             except (pytz.AmbiguousTimeError, pytz.NonExistentTimeError):
                 return None, None
-            
-            if custom_end_local <= custom_start_local:
-                    custom_end_local += timedelta(days=1)
 
-            return custom_start_local.astimezone(pytz.UTC), custom_end_local.astimezone(pytz.UTC)
-            
+            if custom_end_local <= custom_start_local:
+                custom_end_local += timedelta(days=1)
+
+            return custom_start_local.astimezone(pytz.UTC), custom_end_local.astimezone(
+                pytz.UTC
+            )
+
         else:
             return None, None
 
     return None
+
 
 def generate_candidate_slots(window_start, window_end, duration_minutes: int):
     slots = []
@@ -56,15 +67,19 @@ def generate_candidate_slots(window_start, window_end, duration_minutes: int):
 
     return slots
 
-def filter_by_notice_and_future(slots, min_notice_hours, max_future_days, now, target_date: date):
+
+def filter_by_notice_and_future(
+    slots, min_notice_hours, max_future_days, now, target_date: date
+):
     today = now.date()
-   
+
     if target_date > today + timedelta(days=max_future_days):
         return []
-        
+
     earliest_allowed = now + timedelta(hours=min_notice_hours)
 
     return [(start, end) for start, end in slots if start >= earliest_allowed]
+
 
 def filter_by_bookings(slots, bookings, buffer_before: int, buffer_after: int):
     available_slots = []
@@ -72,29 +87,48 @@ def filter_by_bookings(slots, bookings, buffer_before: int, buffer_after: int):
     for slot_start, slot_end in slots:
         blocked = False
         for booking in bookings:
-            booking_start = booking['start_time']
-            booking_end = booking['end_time']
+            booking_start = booking["start_time"]
+            booking_end = booking["end_time"]
             blocked_start = booking_start - timedelta(minutes=buffer_before)
             blocked_end = booking_end + timedelta(minutes=buffer_after)
 
             if slot_start < blocked_end and slot_end > blocked_start:
                 blocked = True
-                break 
+                break
         if not blocked:
             available_slots.append((slot_start, slot_end))
     return available_slots
 
+
 def convert_slots_to_timezone(slots, timezone: str):
     tz = pytz.timezone(timezone)
     return [
-        {"start": slot_start.astimezone(tz).isoformat(), "end": slot_end.astimezone(tz).isoformat()}
-        for slot_start, slot_end in slots]
+        {
+            "start": slot_start.astimezone(tz).isoformat(),
+            "end": slot_end.astimezone(tz).isoformat(),
+        }
+        for slot_start, slot_end in slots
+    ]
 
-def generate_slots(rules, overrides, bookings, target_date, timezone, 
-                   duration, buffer_before, buffer_after, 
-                   min_notice_hours, max_future_days, owner_timezone, now):
-    
-    window_start, window_end = get_availability_window(rules, target_date, owner_timezone)
+
+def generate_slots(
+    rules,
+    overrides,
+    bookings,
+    target_date,
+    timezone,
+    duration,
+    buffer_before,
+    buffer_after,
+    min_notice_hours,
+    max_future_days,
+    owner_timezone,
+    now,
+):
+
+    window_start, window_end = get_availability_window(
+        rules, target_date, owner_timezone
+    )
 
     override = apply_date_override(overrides, target_date, owner_timezone)
 
@@ -106,10 +140,10 @@ def generate_slots(rules, overrides, bookings, target_date, timezone,
 
     slots = generate_candidate_slots(window_start, window_end, duration)
 
-    slots = filter_by_notice_and_future(slots, min_notice_hours, max_future_days, now, target_date)
+    slots = filter_by_notice_and_future(
+        slots, min_notice_hours, max_future_days, now, target_date
+    )
 
     slots = filter_by_bookings(slots, bookings, buffer_before, buffer_after)
 
     return convert_slots_to_timezone(slots, timezone)
-
-   

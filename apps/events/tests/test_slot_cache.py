@@ -121,7 +121,9 @@ class TestSlotCacheService:
         cache.set(old_key, ["old_cached"])
 
         new_start_time = booking.start_time + timedelta(days=1)
-        new_end_time = new_start_time + timedelta(minutes=booking.event_type.duration_minutes)
+        new_end_time = new_start_time + timedelta(
+            minutes=booking.event_type.duration_minutes
+        )
         new_date = new_start_time.date().isoformat()
         new_key = build_slot_cache_key(
             event_type_id=booking.event_type_id,
@@ -132,7 +134,7 @@ class TestSlotCacheService:
 
         BookingService.reschedule_booking(
             booking=booking,
-            user=booking.event_type.owner,       # authenticated owner — satisfies audit_user
+            user=booking.event_type.owner,  # authenticated owner — satisfies audit_user
             start_time=new_start_time,
             end_time=new_end_time,
         )

@@ -10,43 +10,69 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('events', '0001_initial'),
-        ('teams', '0001_initial'),
+        ("events", "0001_initial"),
+        ("teams", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='eventtype',
-            name='owner',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='event_types', to=settings.AUTH_USER_MODEL),
+            model_name="eventtype",
+            name="owner",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="event_types",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='eventtype',
-            name='team',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='event_types', to='teams.team'),
+            model_name="eventtype",
+            name="team",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="event_types",
+                to="teams.team",
+            ),
         ),
         migrations.AddField(
-            model_name='dateoverride',
-            name='event_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='date_overrides', to='events.eventtype'),
+            model_name="dateoverride",
+            name="event_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="date_overrides",
+                to="events.eventtype",
+            ),
         ),
         migrations.AddField(
-            model_name='availabilityrule',
-            name='event_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='availability_rules', to='events.eventtype'),
+            model_name="availabilityrule",
+            name="event_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="availability_rules",
+                to="events.eventtype",
+            ),
         ),
         migrations.AddField(
-            model_name='eventtypequestion',
-            name='event_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='questions', to='events.eventtype'),
+            model_name="eventtypequestion",
+            name="event_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="questions",
+                to="events.eventtype",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='eventtype',
-            constraint=models.UniqueConstraint(fields=('owner', 'slug'), name='unique_owner_slug'),
+            model_name="eventtype",
+            constraint=models.UniqueConstraint(
+                fields=("owner", "slug"), name="unique_owner_slug"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='dateoverride',
-            constraint=models.UniqueConstraint(fields=('event_type', 'specific_date'), name='unique_event_type_date'),
+            model_name="dateoverride",
+            constraint=models.UniqueConstraint(
+                fields=("event_type", "specific_date"), name="unique_event_type_date"
+            ),
         ),
     ]

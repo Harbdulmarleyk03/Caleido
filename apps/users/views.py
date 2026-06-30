@@ -1,9 +1,15 @@
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
-from apps.users.serializers import (RegisterSerializer, UserProfileSerializer, LoginSerializer, 
-        ResendVerificationSerializer, PasswordResetConfirmSerializer, PasswordResetRequestSerializer,
-        ChangePasswordSerializer)
+from apps.users.serializers import (
+    RegisterSerializer,
+    UserProfileSerializer,
+    LoginSerializer,
+    ResendVerificationSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetRequestSerializer,
+    ChangePasswordSerializer,
+)
 from .services import AuthService
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -22,6 +28,7 @@ from .google_client import exchange_code_for_tokens, get_google_auth_url, get_us
 User = get_user_model()
 auth_service = AuthService()
 
+
 class RegisterView(APIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
@@ -31,23 +38,35 @@ class RegisterView(APIView):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             auth_service.register_user(serializer.validated_data)
-            return Response({'detail': 'User registered successfully. Please check your email to verify your account.'}, status=status.HTTP_201_CREATED)
+            return Response(
+                {
+                    "detail": "User registered successfully. Please check your email to verify your account."
+                },
+                status=status.HTTP_201_CREATED,
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        token = request.query_params.get('token')
+        token = request.query_params.get("token")
         if not token:
-            return Response({'error': 'Token is missing, expired or invalid'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Token is missing, expired or invalid"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             user = verify_verification_token(token)
-            user.is_verified = True 
+            user.is_verified = True
             user.save()
         except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'detail': 'Email Verified successfully'}, status=status.HTTP_200_OK)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": "Email Verified successfully"}, status=status.HTTP_200_OK
+        )
+
 
 class ResendVerificationEmailView(APIView):
     permission_classes = [AllowAny]
@@ -63,23 +82,36 @@ class ResendVerificationEmailView(APIView):
 
         # Cooldown check
         if cache.get(cache_key):
-            return Response({"detail": "Please wait before requesting another verification email."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+            return Response(
+                {"detail": "Please wait before requesting another verification email."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
 
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             # Set cooldown anyway to prevent probing
             cache.set(cache_key, True, timeout=self.COOLDOWN_SECONDS)
-            return Response({"detail": "If an account exists, a verification email has been sent."}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "If an account exists, a verification email has been sent."},
+                status=status.HTTP_200_OK,
+            )
 
         if user.is_verified:
             # Still set cooldown to avoid spam
             cache.set(cache_key, True, timeout=self.COOLDOWN_SECONDS)
-            return Response({"detail": "If an account exists, a verification email has been sent."}, status=status.HTTP_200_OK)
+            return Response(
+                {"detail": "If an account exists, a verification email has been sent."},
+                status=status.HTTP_200_OK,
+            )
         send_verification_email.delay(user.id)
         # Set cooldown
         cache.set(cache_key, True, timeout=self.COOLDOWN_SECONDS)
-        return Response({"detail": "If an account exists, a verification email has been sent."}, status=status.HTTP_200_OK)        
+        return Response(
+            {"detail": "If an account exists, a verification email has been sent."},
+            status=status.HTTP_200_OK,
+        )
+
 
 class LoginView(APIView):
     serializer_class = LoginSerializer
@@ -88,18 +120,21 @@ class LoginView(APIView):
 
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
-        serializer.is_valid(raise_exception=True)  
+        serializer.is_valid(raise_exception=True)
         user = auth_service.login_user(**serializer.validated_data)
         refresh = RefreshToken.for_user(user)
         access = refresh.access_token
-        return Response({"access": str(access), "refresh": str(refresh)}, status=status.HTTP_200_OK)
+        return Response(
+            {"access": str(access), "refresh": str(refresh)}, status=status.HTTP_200_OK
+        )
+
 
 class TokenRefreshView(APIView):
     permission_classes = [AllowAny]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
-        refresh_token = request.data.get('refresh')
+        refresh_token = request.data.get("refresh")
         if not refresh_token:
             raise AuthenticationFailed("Refresh token is required")
         try:
@@ -107,27 +142,40 @@ class TokenRefreshView(APIView):
             token.check_blacklist()
             access_token = str(token.access_token)
             token.blacklist()
-            return Response({'new_access': str(access_token), 'new_refresh': str(token)}, status=status.HTTP_200_OK)
+            return Response(
+                {"new_access": str(access_token), "new_refresh": str(token)},
+                status=status.HTTP_200_OK,
+            )
         except Exception:
-            return Response({'error': 'Invalid/expired token'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"error": "Invalid/expired token"}, status=status.HTTP_401_UNAUTHORIZED
+            )
+
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
     def post(self, request):
-        refresh = request.data.get('refresh')
+        refresh = request.data.get("refresh")
         if not refresh:
-            return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)    
+            return Response(
+                {"error": "Refresh token is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
-            token = RefreshToken(refresh)  
+            token = RefreshToken(refresh)
             token.blacklist()
         except Exception:
-            return Response({'error': 'Failed to blacklist token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Failed to blacklist token"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response(status=status.HTTP_204_NO_CONTENT)
-        
+
+
 class LogoutAllView(APIView):
-    permission_classes = [IsAuthenticated]       
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         tokens = OutstandingToken.objects.filter(user=request.user)
@@ -138,6 +186,7 @@ class LogoutAllView(APIView):
             except Exception:
                 pass
         return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
@@ -153,6 +202,7 @@ class PasswordResetRequestView(APIView):
         except User.DoesNotExist:
             pass  # silent — no enumeration
         return Response(status=status.HTTP_200_OK)
+
 
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
@@ -175,45 +225,61 @@ class PasswordResetConfirmView(APIView):
                     pass
             return Response(status=status.HTTP_200_OK)
         except Exception:
-            return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
 
     def patch(self, request):
-        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer = self.serializer_class(
+            data=request.data, context={"request": request}
+        )
         serializer.is_valid(raise_exception=True)
         new_password = serializer.validated_data["new_password"]
         user = request.user
         user.set_password(new_password)
         user.save()
-        return Response({'detail': 'Password changed successfully'}, status=status.HTTP_200_OK)
+        return Response(
+            {"detail": "Password changed successfully"}, status=status.HTTP_200_OK
+        )
+
 
 class GoogleOAuthRedirectView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
         url, state = get_google_auth_url()
-        return Response({'url': url}, status=status.HTTP_200_OK)
-    
+        return Response({"url": url}, status=status.HTTP_200_OK)
+
+
 class GoogleOAuthCallbackView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        code = request.query_params.get('code')
+        code = request.query_params.get("code")
         if not code:
-            return Response({'error': 'Authorization code is required'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "Authorization code is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         try:
             tokens = exchange_code_for_tokens(code)
-            google_user_info = get_user_info(tokens['access_token'])
+            google_user_info = get_user_info(tokens["access_token"])
             user = auth_service.oauth_upsert_user(google_user_info)
             refresh = RefreshToken.for_user(user)
             access = refresh.access_token
-            return Response({'access': str(access), 'refresh': str(refresh)}, status=status.HTTP_200_OK)
+            return Response(
+                {"access": str(access), "refresh": str(refresh)},
+                status=status.HTTP_200_OK,
+            )
         except Exception as e:
             print(f"OAuth error: {e}")
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
@@ -224,7 +290,8 @@ class UserProfileView(RetrieveUpdateAPIView):
 
     def get_object(self):
         return self.request.user
-    
+
+
 class AccountDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -236,10 +303,10 @@ class AccountDeleteView(APIView):
                 RefreshTokenObj(outstanding_token.token).blacklist()
             except Exception:
                 pass
-        user.email = f'deleted_{user.id}@deleted.local'
-        user.first_name = 'Deleted'
-        user.last_name = 'User'
-        user.username = f'deleted_{user.id}'
+        user.email = f"deleted_{user.id}@deleted.local"
+        user.first_name = "Deleted"
+        user.last_name = "User"
+        user.username = f"deleted_{user.id}"
         user.avatar_url = None
         user.is_active = False
         user.save()

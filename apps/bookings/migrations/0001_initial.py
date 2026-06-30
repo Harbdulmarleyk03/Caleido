@@ -8,68 +8,123 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Booking',
+            name="Booking",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('start_time', models.DateTimeField()),
-                ('end_time', models.DateTimeField()),
-                ('status', models.CharField(choices=[('confirmed', 'Confirmed'), ('cancelled', 'Cancelled'), ('rescheduled', 'Rescheduled')], default='confirmed', max_length=20)),
-                ('idempotency_key', models.CharField(max_length=255, unique=True)),
-                ('cancel_reason', models.TextField(blank=True, null=True)),
-                ('google_event_id', models.CharField(blank=True, max_length=255, null=True)),
-                ('google_meet_link', models.TextField(blank=True, null=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("start_time", models.DateTimeField()),
+                ("end_time", models.DateTimeField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("confirmed", "Confirmed"),
+                            ("cancelled", "Cancelled"),
+                            ("rescheduled", "Rescheduled"),
+                        ],
+                        default="confirmed",
+                        max_length=20,
+                    ),
+                ),
+                ("idempotency_key", models.CharField(max_length=255, unique=True)),
+                ("cancel_reason", models.TextField(blank=True, null=True)),
+                (
+                    "google_event_id",
+                    models.CharField(blank=True, max_length=255, null=True),
+                ),
+                ("google_meet_link", models.TextField(blank=True, null=True)),
             ],
             options={
-                'db_table': 'bookings_booking',
-                'ordering': ['start_time'],
+                "db_table": "bookings_booking",
+                "ordering": ["start_time"],
             },
         ),
         migrations.CreateModel(
-            name='BookingAnswer',
+            name="BookingAnswer",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('answer_text', models.TextField()),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("answer_text", models.TextField()),
             ],
             options={
-                'db_table': 'bookings_answer',
+                "db_table": "bookings_answer",
             },
         ),
         migrations.CreateModel(
-            name='BookingAudit',
+            name="BookingAudit",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('action', models.CharField(choices=[('created', 'Created'), ('cancelled', 'Cancelled'), ('rescheduled', 'Rescheduled')], max_length=30)),
-                ('previous_data', models.JSONField(blank=True, null=True)),
-                ('changed_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("created", "Created"),
+                            ("cancelled", "Cancelled"),
+                            ("rescheduled", "Rescheduled"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("previous_data", models.JSONField(blank=True, null=True)),
+                ("changed_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'bookings_audit',
-                'ordering': ['changed_at'],
+                "db_table": "bookings_audit",
+                "ordering": ["changed_at"],
             },
         ),
         migrations.CreateModel(
-            name='Invitee',
+            name="Invitee",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(max_length=200)),
-                ('email', models.EmailField(max_length=254)),
-                ('timezone', models.CharField(max_length=50)),
-                ('locale', models.CharField(default='en', max_length=10)),
-                ('notes', models.TextField(blank=True, null=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("name", models.CharField(max_length=200)),
+                ("email", models.EmailField(max_length=254)),
+                ("timezone", models.CharField(max_length=50)),
+                ("locale", models.CharField(default="en", max_length=10)),
+                ("notes", models.TextField(blank=True, null=True)),
             ],
             options={
-                'db_table': 'bookings_invitee',
+                "db_table": "bookings_invitee",
             },
         ),
     ]

@@ -9,51 +9,102 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='ProcessedStripeEvent',
+            name="ProcessedStripeEvent",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('stripe_event_id', models.CharField(max_length=255, unique=True)),
-                ('processed_at', models.DateTimeField(auto_now_add=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("stripe_event_id", models.CharField(max_length=255, unique=True)),
+                ("processed_at", models.DateTimeField(auto_now_add=True)),
             ],
             options={
-                'db_table': 'payments_processed_event',
+                "db_table": "payments_processed_event",
             },
         ),
         migrations.CreateModel(
-            name='StripePayment',
+            name="StripePayment",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('payment_intent_id', models.CharField(max_length=255, unique=True)),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('succeeded', 'Succeeded'), ('failed', 'Failed'), ('refunded', 'Refunded')], max_length=30)),
-                ('amount_cents', models.PositiveIntegerField()),
-                ('currency', models.CharField(max_length=3)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("payment_intent_id", models.CharField(max_length=255, unique=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("succeeded", "Succeeded"),
+                            ("failed", "Failed"),
+                            ("refunded", "Refunded"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("amount_cents", models.PositiveIntegerField()),
+                ("currency", models.CharField(max_length=3)),
             ],
             options={
-                'db_table': 'payments_stripe_payment',
-                'ordering': ['-created_at'],
+                "db_table": "payments_stripe_payment",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='StripeRefund',
+            name="StripeRefund",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('refund_id', models.CharField(max_length=255, unique=True)),
-                ('amount_cents', models.PositiveIntegerField()),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('succeeded', 'Succeeded'), ('failed', 'Failed')], max_length=20)),
-                ('payment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='refunds', to='payments.stripepayment')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("refund_id", models.CharField(max_length=255, unique=True)),
+                ("amount_cents", models.PositiveIntegerField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("succeeded", "Succeeded"),
+                            ("failed", "Failed"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "payment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="refunds",
+                        to="payments.stripepayment",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'payments_stripe_refund',
-                'ordering': ['-created_at'],
+                "db_table": "payments_stripe_refund",
+                "ordering": ["-created_at"],
             },
         ),
     ]

@@ -1,15 +1,21 @@
 import pytest
 from django.core import mail
 from django.test import override_settings
-from apps.bookings.tasks import send_booking_confirmation_email, send_booking_cancellation_email, send_booking_reschedule_email, send_booking_reminder_email
-import uuid 
+from apps.bookings.tasks import (
+    send_booking_confirmation_email,
+    send_booking_cancellation_email,
+    send_booking_reschedule_email,
+    send_booking_reminder_email,
+)
+import uuid
+
 
 @pytest.mark.django_db
 class TestSendBookingConfirmationEmail:
-    
+
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     def test_send_booking_confirmed_sends_two_emails(self, booking_with_invitee):
-        
+
         send_booking_confirmation_email(str(booking_with_invitee.id))
 
         assert len(mail.outbox) == 2
@@ -18,7 +24,9 @@ class TestSendBookingConfirmationEmail:
         assert booking_with_invitee.event_type.owner.email in recipients
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
-    def test_send_booking_confirmed_skips_when_not_confirmed(self, booking_with_invitee):
+    def test_send_booking_confirmed_skips_when_not_confirmed(
+        self, booking_with_invitee
+    ):
         booking_with_invitee.status = "cancelled"
         booking_with_invitee.save()
 
@@ -29,15 +37,16 @@ class TestSendBookingConfirmationEmail:
         fake_id = str(uuid.uuid4())
 
         send_booking_confirmation_email(fake_id)
-        assert "not found" in caplog.text 
+        assert "not found" in caplog.text
         assert len(mail.outbox) == 0
+
 
 @pytest.mark.django_db
 class TestSendBookingCancellationEmail:
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     def test_send_booking_cancellation_sends_two_emails(self, booking_with_invitee):
-        booking_with_invitee.status = 'cancelled'
+        booking_with_invitee.status = "cancelled"
         booking_with_invitee.save()
 
         send_booking_cancellation_email(str(booking_with_invitee.id))
@@ -48,8 +57,10 @@ class TestSendBookingCancellationEmail:
         assert booking_with_invitee.event_type.owner.email in recipients
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
-    def test_send_booking_cancellation_skips_when_not_cancelled(self, booking_with_invitee):
-        
+    def test_send_booking_cancellation_skips_when_not_cancelled(
+        self, booking_with_invitee
+    ):
+
         send_booking_cancellation_email(str(booking_with_invitee.id))
 
         assert len(mail.outbox) == 0
@@ -59,7 +70,7 @@ class TestSendBookingCancellationEmail:
 
         send_booking_cancellation_email(fake_id)
 
-        assert "not found when sending cancellation email" in caplog.text 
+        assert "not found when sending cancellation email" in caplog.text
         assert len(mail.outbox) == 0
 
 
@@ -77,7 +88,9 @@ class TestSendBookingRescheduleEmail:
         assert booking_with_invitee.event_type.owner.email in recipients
 
     @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
-    def test_send_booking_rescheduled_skips_when_not_confirmed(self, booking_with_invitee):
+    def test_send_booking_rescheduled_skips_when_not_confirmed(
+        self, booking_with_invitee
+    ):
         booking_with_invitee.status = "cancelled"
         booking_with_invitee.save()
 
@@ -90,13 +103,16 @@ class TestSendBookingRescheduleEmail:
 
         send_booking_reschedule_email(fake_id)
 
-        assert "not found when sending reschedule email" in caplog.text 
+        assert "not found when sending reschedule email" in caplog.text
         assert len(mail.outbox) == 0
 
-    def test_send_booking_rescheduled_fall_back_with_no_audit(self, booking_with_invitee):
+    def test_send_booking_rescheduled_fall_back_with_no_audit(
+        self, booking_with_invitee
+    ):
 
         send_booking_reschedule_email(str(booking_with_invitee.id))
         assert any("unknown" in msg.body for msg in mail.outbox)
+
 
 @pytest.mark.django_db
 class TestSendBookingReminderEmail:
@@ -125,9 +141,9 @@ class TestSendBookingReminderEmail:
     def test_send_booking_reminder_not_found(self, caplog):
         fake_id = str(uuid.uuid4())
 
-        send_booking_reminder_email(fake_id, '24h')
+        send_booking_reminder_email(fake_id, "24h")
 
-        assert "not found when sending reminder email" in caplog.text 
+        assert "not found when sending reminder email" in caplog.text
         assert len(mail.outbox) == 0
 
     def test_send_booking_reminder_24h_message_body(self, booking_with_invitee):
@@ -141,5 +157,3 @@ class TestSendBookingReminderEmail:
         send_booking_reminder_email(str(booking_with_invitee.id), "1h")
 
         assert any("1h" in msg.body for msg in mail.outbox)
-
-    

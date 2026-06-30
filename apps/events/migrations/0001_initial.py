@@ -8,83 +8,152 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='AvailabilityRule',
+            name="AvailabilityRule",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('day_of_week', models.SmallIntegerField()),
-                ('start_time', models.TimeField()),
-                ('end_time', models.TimeField()),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("day_of_week", models.SmallIntegerField()),
+                ("start_time", models.TimeField()),
+                ("end_time", models.TimeField()),
             ],
             options={
-                'db_table': 'events_availability_rule',
-                'ordering': ['day_of_week', 'start_time'],
+                "db_table": "events_availability_rule",
+                "ordering": ["day_of_week", "start_time"],
             },
         ),
         migrations.CreateModel(
-            name='DateOverride',
+            name="DateOverride",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('specific_date', models.DateField()),
-                ('is_unavailable', models.BooleanField(default=False)),
-                ('custom_start', models.TimeField(blank=True, null=True)),
-                ('custom_end', models.TimeField(blank=True, null=True)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("specific_date", models.DateField()),
+                ("is_unavailable", models.BooleanField(default=False)),
+                ("custom_start", models.TimeField(blank=True, null=True)),
+                ("custom_end", models.TimeField(blank=True, null=True)),
             ],
             options={
-                'db_table': 'events_date_override',
+                "db_table": "events_date_override",
             },
         ),
         migrations.CreateModel(
-            name='EventType',
+            name="EventType",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('title', models.CharField(max_length=200)),
-                ('slug', models.SlugField(max_length=100)),
-                ('description', models.TextField(blank=True, null=True)),
-                ('duration_minutes', models.PositiveIntegerField()),
-                ('color', models.CharField(default='#0069FF', max_length=7)),
-                ('location_type', models.CharField(choices=[('google_meet', 'Google Meet'), ('zoom', 'Zoom'), ('phone', 'Phone'), ('in_person', 'In Person'), ('custom', 'Custom')], max_length=30)),
-                ('location_value', models.TextField(blank=True, null=True)),
-                ('is_active', models.BooleanField(default=True)),
-                ('is_paid', models.BooleanField(default=False)),
-                ('price_cents', models.PositiveIntegerField(blank=True, null=True)),
-                ('currency', models.CharField(blank=True, default='USD', max_length=3, null=True)),
-                ('assignment_rule', models.CharField(choices=[('direct', 'Direct'), ('round_robin', 'Round Robin'), ('collective', 'Collective')], default='direct', max_length=20)),
-                ('buffer_before_min', models.PositiveIntegerField(default=0)),
-                ('buffer_after_min', models.PositiveIntegerField(default=0)),
-                ('min_notice_hours', models.PositiveIntegerField(default=24)),
-                ('max_future_days', models.PositiveIntegerField(default=60)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("title", models.CharField(max_length=200)),
+                ("slug", models.SlugField(max_length=100)),
+                ("description", models.TextField(blank=True, null=True)),
+                ("duration_minutes", models.PositiveIntegerField()),
+                ("color", models.CharField(default="#0069FF", max_length=7)),
+                (
+                    "location_type",
+                    models.CharField(
+                        choices=[
+                            ("google_meet", "Google Meet"),
+                            ("zoom", "Zoom"),
+                            ("phone", "Phone"),
+                            ("in_person", "In Person"),
+                            ("custom", "Custom"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                ("location_value", models.TextField(blank=True, null=True)),
+                ("is_active", models.BooleanField(default=True)),
+                ("is_paid", models.BooleanField(default=False)),
+                ("price_cents", models.PositiveIntegerField(blank=True, null=True)),
+                (
+                    "currency",
+                    models.CharField(
+                        blank=True, default="USD", max_length=3, null=True
+                    ),
+                ),
+                (
+                    "assignment_rule",
+                    models.CharField(
+                        choices=[
+                            ("direct", "Direct"),
+                            ("round_robin", "Round Robin"),
+                            ("collective", "Collective"),
+                        ],
+                        default="direct",
+                        max_length=20,
+                    ),
+                ),
+                ("buffer_before_min", models.PositiveIntegerField(default=0)),
+                ("buffer_after_min", models.PositiveIntegerField(default=0)),
+                ("min_notice_hours", models.PositiveIntegerField(default=24)),
+                ("max_future_days", models.PositiveIntegerField(default=60)),
             ],
             options={
-                'db_table': 'events_event_type',
-                'ordering': ['-created_at'],
+                "db_table": "events_event_type",
+                "ordering": ["-created_at"],
             },
         ),
         migrations.CreateModel(
-            name='EventTypeQuestion',
+            name="EventTypeQuestion",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('question_text', models.CharField(max_length=500)),
-                ('question_type', models.CharField(choices=[('text', 'Text'), ('select', 'Select'), ('checkbox', 'Checkbox')], max_length=20)),
-                ('options', models.JSONField(blank=True, null=True)),
-                ('is_required', models.BooleanField(default=False)),
-                ('display_order', models.SmallIntegerField(default=0)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("question_text", models.CharField(max_length=500)),
+                (
+                    "question_type",
+                    models.CharField(
+                        choices=[
+                            ("text", "Text"),
+                            ("select", "Select"),
+                            ("checkbox", "Checkbox"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("options", models.JSONField(blank=True, null=True)),
+                ("is_required", models.BooleanField(default=False)),
+                ("display_order", models.SmallIntegerField(default=0)),
             ],
             options={
-                'db_table': 'events_question',
-                'ordering': ['display_order'],
+                "db_table": "events_question",
+                "ordering": ["display_order"],
             },
         ),
     ]

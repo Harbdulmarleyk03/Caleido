@@ -1,5 +1,5 @@
 from django.db import connection
-import pytest 
+import pytest
 from apps.users.models import OutstandingToken, User
 from rest_framework_simplejwt.tokens import RefreshToken
 from apps.users.tests.factories import UserFactory
@@ -7,88 +7,90 @@ from apps.users.tokens import generate_password_reset_token, generate_verificati
 from unittest.mock import patch
 from django.core.signing import SignatureExpired
 
+
 @pytest.mark.django_db
 class TestRegisterView:
-    
+
     def test_register_success(self, api_client):
         data = {
-            'email': 'john@example.com',
-            'password': 'Secure123',
-            'password2': 'Secure123',
-            'first_name': 'John',
-            'last_name': 'Doe',
-            'username': 'johndoe',
-            'timezone': 'Africa/Lagos',
+            "email": "john@example.com",
+            "password": "Secure123",
+            "password2": "Secure123",
+            "first_name": "John",
+            "last_name": "Doe",
+            "username": "johndoe",
+            "timezone": "Africa/Lagos",
         }
-        response = api_client.post('/api/v1/auth/register/', data, format='json')
-        
+        response = api_client.post("/api/v1/auth/register/", data, format="json")
+
         assert response.status_code == 201
-        assert User.objects.filter(email='john@example.com').exists()
-        user = User.objects.get(email='john@example.com')
-        assert user.check_password('Secure123')  # confirms password was hashed
+        assert User.objects.filter(email="john@example.com").exists()
+        user = User.objects.get(email="john@example.com")
+        assert user.check_password("Secure123")  # confirms password was hashed
         assert not user.is_verified
 
     def test_register_duplicate_email(self, api_client):
         User.objects.create_user(
-            email='john@example.com',
-            password='Secure123',
-            first_name='John',
-            last_name='Doe',
-            username='johndoe',
+            email="john@example.com",
+            password="Secure123",
+            first_name="John",
+            last_name="Doe",
+            username="johndoe",
         )
         data = {
-            'email': 'john@example.com',
-            'password': 'Secure123',
-            'password2': 'Secure123',
-            'first_name': 'John',
-            'last_name': 'Doe',
-            'username': 'johndoe2',  # different username to isolate the email conflict
-            'timezone': 'Africa/Lagos',
+            "email": "john@example.com",
+            "password": "Secure123",
+            "password2": "Secure123",
+            "first_name": "John",
+            "last_name": "Doe",
+            "username": "johndoe2",  # different username to isolate the email conflict
+            "timezone": "Africa/Lagos",
         }
-        response = api_client.post('/api/v1/auth/register/', data, format='json')
+        response = api_client.post("/api/v1/auth/register/", data, format="json")
         assert response.status_code == 400
-        assert 'email' in response.data
+        assert "email" in response.data
 
     def test_register_missing_fields(self, api_client):
         data = {
-                'password': 'Secure123',
-                'password2': 'Secure123',
-                'username': 'johndoe',
-                'first_name': 'John',
-                'last_name': 'Doe',
-                'timezone': 'Africa/Lagos',
-            }
+            "password": "Secure123",
+            "password2": "Secure123",
+            "username": "johndoe",
+            "first_name": "John",
+            "last_name": "Doe",
+            "timezone": "Africa/Lagos",
+        }
 
-        response = api_client.post('/api/v1/auth/register/', data, format='json')
+        response = api_client.post("/api/v1/auth/register/", data, format="json")
         assert response.status_code == 400
         assert "email" in response.data
 
     def test_register_weak_password(self, api_client):
         data = {
-                'email': 'john@example.com',
-                'password': 'weakpass',
-                'password2': 'weakpass',
-                'first_name': 'John',
-                'last_name': 'Doe',
-                'username': 'johndoe',
-                'timezone': 'Africa/Lagos',
-            }
+            "email": "john@example.com",
+            "password": "weakpass",
+            "password2": "weakpass",
+            "first_name": "John",
+            "last_name": "Doe",
+            "username": "johndoe",
+            "timezone": "Africa/Lagos",
+        }
 
-        response = api_client.post('/api/v1/auth/register/', data, format='json')
+        response = api_client.post("/api/v1/auth/register/", data, format="json")
         assert response.status_code == 400
+
 
 @pytest.mark.django_db
 class TestLoginView:
 
     def test_login_success(self, api_client):
         User.objects.create_user(
-            username='johndoe',
+            username="johndoe",
             email="john@example.com",
             password="Secure123",
-            is_verified=True
+            is_verified=True,
         )
         data = {
-            'username': 'johndoe',
+            "username": "johndoe",
             "email": "john@example.com",
             "password": "Secure123",
         }
@@ -100,13 +102,13 @@ class TestLoginView:
 
     def test_login_wrong_password(self, api_client):
         User.objects.create_user(
-            username='johndoe',
+            username="johndoe",
             email="john@example.com",
             password="Secure123",
-            is_verified=True
+            is_verified=True,
         )
         data = {
-            'username': 'johndoe',
+            "username": "johndoe",
             "email": "john@example.com",
             "password": "Wrongpassword",
         }
@@ -115,13 +117,13 @@ class TestLoginView:
 
     def test_login_unverified_user(self, api_client):
         User.objects.create_user(
-            username= 'johndoe',
+            username="johndoe",
             email="john@example.com",
             password="Secure123",
-            is_verified=False
+            is_verified=False,
         )
         data = {
-            'username': 'johndoe',
+            "username": "johndoe",
             "email": "john@example.com",
             "password": "Secure123",
         }
@@ -136,35 +138,47 @@ class TestLoginView:
         response = api_client.post("/api/v1/auth/login/", data, format="json")
         assert response.status_code == 401
 
+
 @pytest.mark.django_db
 class TestTokenRefreshView:
 
     def test_refresh_success(self, api_client):
         user = UserFactory(is_verified=True)
         refresh = RefreshToken.for_user(user)
-        
-        response = api_client.post('/api/v1/auth/token/refresh/', {'refresh': str(refresh)}, format='json')
-        
+
+        response = api_client.post(
+            "/api/v1/auth/token/refresh/", {"refresh": str(refresh)}, format="json"
+        )
+
         assert response.status_code == 200
-        assert 'new_access' in response.data
-        assert 'new_refresh' in response.data
+        assert "new_access" in response.data
+        assert "new_refresh" in response.data
 
     def test_refresh_invalid_token(self, api_client):
-        response = api_client.post('/api/v1/auth/token/refresh/', {'refresh': 'thisisnot.avalid.token'}, format='json')
-        
+        response = api_client.post(
+            "/api/v1/auth/token/refresh/",
+            {"refresh": "thisisnot.avalid.token"},
+            format="json",
+        )
+
         assert response.status_code == 401
 
     def test_refresh_blacklisted_token(self, api_client):
         user = UserFactory(is_verified=True)
         refresh = RefreshToken.for_user(user)
-        
+
         # First request — valid, blacklists the token
-        api_client.post('/api/v1/auth/token/refresh/', {'refresh': str(refresh)}, format='json')
-        
+        api_client.post(
+            "/api/v1/auth/token/refresh/", {"refresh": str(refresh)}, format="json"
+        )
+
         # Second request — same token, now blacklisted
-        response = api_client.post('/api/v1/auth/token/refresh/', {'refresh': str(refresh)}, format='json')
-        
+        response = api_client.post(
+            "/api/v1/auth/token/refresh/", {"refresh": str(refresh)}, format="json"
+        )
+
         assert response.status_code == 401
+
 
 @pytest.mark.django_db(transaction=True)
 class TestLogoutView:
@@ -173,69 +187,79 @@ class TestLogoutView:
         user = UserFactory(is_verified=True)
         refresh = RefreshToken.for_user(user)
         api_client.force_authenticate(user=user)
-        response = api_client.post('/api/v1/auth/logout/', {'refresh': str(refresh)}, format='json')
+        response = api_client.post(
+            "/api/v1/auth/logout/", {"refresh": str(refresh)}, format="json"
+        )
 
-        assert response.status_code == 204 
+        assert response.status_code == 204
 
     def test_logout_unauthenticated(self, api_client):
 
-        response = api_client.post('/api/v1/auth/logout/', format='json')
-        assert response.status_code == 401 
+        response = api_client.post("/api/v1/auth/logout/", format="json")
+        assert response.status_code == 401
 
     def test_logout_invalid_token(self, api_client):
         user = UserFactory(is_verified=True)
-        refresh = 'Not.a.valid.token'
-        
+        refresh = "Not.a.valid.token"
+
         api_client.force_authenticate(user=user)
 
-        response = api_client.post('/api/v1/auth/logout/', {'refresh': str(refresh)}, format='json')
-        assert response.status_code == 400 
-        
+        response = api_client.post(
+            "/api/v1/auth/logout/", {"refresh": str(refresh)}, format="json"
+        )
+        assert response.status_code == 400
+
     def test_logout_all_blacklist_all_tokens(self, api_client):
         user = User.objects.create_user(
-            username='johndoe',
+            username="johndoe",
             email="john@example.com",
             password="Secure123",
-            is_verified=True
+            is_verified=True,
         )
-        from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
-        
+        from rest_framework_simplejwt.token_blacklist.models import (
+            OutstandingToken,
+            BlacklistedToken,
+        )
+
         refresh1 = RefreshToken.for_user(user)
         RefreshToken.for_user(user)
-        
+
         # Directly blacklist all tokens for user
         tokens = OutstandingToken.objects.filter(user=user)
         for token in tokens:
             BlacklistedToken.objects.get_or_create(token=token)
-        
+
         # Verify tokens are blacklisted
         assert BlacklistedToken.objects.count() == 2
-        
+
         # Try to use old refresh token via API
         api_client.credentials()
         response = api_client.post(
-            '/api/v1/auth/token/refresh/', 
-            {'refresh': str(refresh1)}, 
-            format='json'
+            "/api/v1/auth/token/refresh/", {"refresh": str(refresh1)}, format="json"
         )
         assert response.status_code == 401
-        
+
     def test_logout_all_success(self, api_client):
 
         user = User.objects.create_user(
-                username= 'johndoe',
-                email="john@example.com",
-                password="Secure123",
-                is_verified=True
-            )
+            username="johndoe",
+            email="john@example.com",
+            password="Secure123",
+            is_verified=True,
+        )
 
         tokens = OutstandingToken.objects.filter(user=user)
         refresh = RefreshToken.for_user(user)
         api_client.force_authenticate(user=user)
 
-        response = api_client.post('/api/v1/auth/logout-all/', {'tokens': str(tokens), 'refresh': str(refresh)}, format='json')
+        response = api_client.post(
+            "/api/v1/auth/logout-all/",
+            {"tokens": str(tokens), "refresh": str(refresh)},
+            format="json",
+        )
 
         assert response.status_code == 204
+
 
 @pytest.mark.django_db
 class TestEmailVerificationView:
@@ -244,61 +268,78 @@ class TestEmailVerificationView:
         user = UserFactory(is_verified=False)
         token = generate_verification_token(user)
 
-        response = api_client.get('/api/v1/auth/verify-email/', {'token': str(token)}, format='json')
+        response = api_client.get(
+            "/api/v1/auth/verify-email/", {"token": str(token)}, format="json"
+        )
         user.refresh_from_db()
 
-        assert user.is_verified 
+        assert user.is_verified
         assert response.status_code == 200
 
     def test_verify_email_invalid_token(self, api_client):
         token = "not.valid.token"
 
-        response = api_client.get('/api/v1/auth/verify-email/', {'token': str(token)}, format='json')
+        response = api_client.get(
+            "/api/v1/auth/verify-email/", {"token": str(token)}, format="json"
+        )
 
-        assert response.status_code == 400 
+        assert response.status_code == 400
 
     def test_verify_email_expired_token(self, api_client):
         user = UserFactory(is_verified=False)
         token = generate_verification_token(user)
 
-        with patch('apps.users.tokens.signing.loads', side_effect=SignatureExpired):
-            response = api_client.get('/api/v1/auth/verify-email/', {'token': token}, format='json')
+        with patch("apps.users.tokens.signing.loads", side_effect=SignatureExpired):
+            response = api_client.get(
+                "/api/v1/auth/verify-email/", {"token": token}, format="json"
+            )
         assert response.status_code == 400
 
     def test_resend_verification_success(self, api_client):
         user = UserFactory(is_verified=False)
 
-        response = api_client.post('/api/v1/auth/verify-email/resend/', {'email': user.email}, format='json')
+        response = api_client.post(
+            "/api/v1/auth/verify-email/resend/", {"email": user.email}, format="json"
+        )
         assert response.status_code == 200
-
 
     def test_resend_verification_cooldown(self, api_client):
         user = UserFactory(is_verified=False)
 
-        api_client.post('/api/v1/auth/verify-email/resend/', {'email': user.email}, format='json')
-        response = api_client.post('/api/v1/auth/verify-email/resend/', {'email': user.email}, format='json')
+        api_client.post(
+            "/api/v1/auth/verify-email/resend/", {"email": user.email}, format="json"
+        )
+        response = api_client.post(
+            "/api/v1/auth/verify-email/resend/", {"email": user.email}, format="json"
+        )
         assert response.status_code == 429
-                
+
     def test_resend_already_verified(self, api_client):
         user = UserFactory(is_verified=True)
 
-        response = api_client.post('/api/v1/auth/verify-email/resend/', {'email': user.email}, format='json')
+        response = api_client.post(
+            "/api/v1/auth/verify-email/resend/", {"email": user.email}, format="json"
+        )
         assert response.status_code == 200
 
 
-@pytest.mark.django_db(transaction=True) 
+@pytest.mark.django_db(transaction=True)
 class TestPasswordResetView:
 
     def test_password_reset_request_success(self, api_client):
         user = UserFactory(is_verified=True)
-            
-        response = api_client.post('/api/v1/auth/password-reset/', {'email': user.email}, format='json')
+
+        response = api_client.post(
+            "/api/v1/auth/password-reset/", {"email": user.email}, format="json"
+        )
         assert response.status_code == 200
 
     def test_password_reset_request_nonexistent_email(self, api_client):
         user = UserFactory(is_verified=False)
 
-        response = api_client.post('/api/v1/auth/password-reset/', {'email': user.email}, format='json')
+        response = api_client.post(
+            "/api/v1/auth/password-reset/", {"email": user.email}, format="json"
+        )
         assert response.status_code == 200
 
     def test_password_reset_confirm_success(self, api_client):
@@ -306,104 +347,124 @@ class TestPasswordResetView:
         token = generate_password_reset_token(user)
         new_password = "Secure123"
 
-        response = api_client.post('/api/v1/auth/password-reset/confirm/', {'token': token, 'new_password': new_password}, format='json')
+        response = api_client.post(
+            "/api/v1/auth/password-reset/confirm/",
+            {"token": token, "new_password": new_password},
+            format="json",
+        )
         user.refresh_from_db()
-        assert user.check_password(new_password)  
+        assert user.check_password(new_password)
         assert response.status_code == 200
-      
+
     def test_password_reset_confirm_invalid_token(self, api_client):
         token = "not.valid.token"
 
-        response = api_client.post('/api/v1/auth/password-reset/confirm/', {'token': str(token)}, format='json')
+        response = api_client.post(
+            "/api/v1/auth/password-reset/confirm/", {"token": str(token)}, format="json"
+        )
 
-        assert response.status_code == 400 
+        assert response.status_code == 400
 
     def test_password_reset_confirm_expired_token(self, api_client):
         user = UserFactory(is_verified=False)
         token = generate_password_reset_token(user)
 
-        with patch('apps.users.tokens.signing.loads', side_effect=SignatureExpired):
-            response = api_client.post('/api/v1/auth/password-reset/confirm/', {'token': token}, format='json')
+        with patch("apps.users.tokens.signing.loads", side_effect=SignatureExpired):
+            response = api_client.post(
+                "/api/v1/auth/password-reset/confirm/", {"token": token}, format="json"
+            )
         assert response.status_code == 400
 
     def test_password_reset_invalidates_sessions(self, api_client):
         user = User.objects.create_user(
-            username='johndoe',
+            username="johndoe",
             email="john@example.com",
             password="Secure123",
-            is_verified=True
-        )    
+            is_verified=True,
+        )
 
         token = generate_password_reset_token(user)
-        
-        response = api_client.post('/api/v1/auth/password-reset/confirm/', {'token': token, 'new_password': 'NewSecure456'}, format='json')
+
+        response = api_client.post(
+            "/api/v1/auth/password-reset/confirm/",
+            {"token": token, "new_password": "NewSecure456"},
+            format="json",
+        )
         assert response.status_code == 200
-        
+
         # Verify password was changed
         user.refresh_from_db()
-        assert not user.check_password('Secure123')  # old password no longer works
-        assert user.check_password('NewSecure456')   # new password works
+        assert not user.check_password("Secure123")  # old password no longer works
+        assert user.check_password("NewSecure456")  # new password works
 
     def test_change_password_success(self, api_client):
         user = User.objects.create_user(
-            username='johndoe',
+            username="johndoe",
             email="john@example.com",
             password="Secure123",
-            is_verified=True
+            is_verified=True,
         )
-          
+
         data = {
-            'username': 'johndoe',
+            "username": "johndoe",
             "email": "john@example.com",
             "password": "Secure123",
         }
 
-        data['password']
+        data["password"]
 
         api_client.force_authenticate(user=user)
 
-
-        response = api_client.patch('/api/v1/users/me/password/', {'old_password': 'Secure123', 'new_password': 'NewSecure456'}, format='json')        
+        response = api_client.patch(
+            "/api/v1/users/me/password/",
+            {"old_password": "Secure123", "new_password": "NewSecure456"},
+            format="json",
+        )
         assert response.status_code == 200
 
-    
     def test_change_password_wrong_old_password(self, api_client):
         user = User.objects.create_user(
-            username='johndoe',
+            username="johndoe",
             email="john@example.com",
             password="Secure123",
-            is_verified=True
+            is_verified=True,
         )
 
         api_client.force_authenticate(user=user)
 
-        response = api_client.patch('/api/v1/users/me/password/', {'old_password': 'WrongPassword1', 'new_password': 'NewSecure456'}, format='json')
-        
+        response = api_client.patch(
+            "/api/v1/users/me/password/",
+            {"old_password": "WrongPassword1", "new_password": "NewSecure456"},
+            format="json",
+        )
+
         assert response.status_code == 400
+
 
 @pytest.mark.django_db
 class TestGoogleOAuthView:
 
     def test_google_redirect_returns_url(self, api_client):
-        response = api_client.get('/api/v1/auth/google/', format='json')
+        response = api_client.get("/api/v1/auth/google/", format="json")
 
         assert response.status_code == 200
         assert "url" in response.data
         assert "accounts.google.com" in response.data["url"]
-        
+
     @patch("apps.users.views.get_user_info")
     @patch("apps.users.views.exchange_code_for_tokens")
-    def test_google_callback_creates_new_user(self, mock_exchange, mock_user_info, api_client):
+    def test_google_callback_creates_new_user(
+        self, mock_exchange, mock_user_info, api_client
+    ):
         mock_exchange.return_value = {"access_token": "fake_access_token"}
         mock_user_info.return_value = {
             "email": "testuser@gmail.com",
             "given_name": "Test",
             "family_name": "User",
-            "sub": "google-123"
+            "sub": "google-123",
         }
         response = api_client.get(
-            '/api/v1/auth/google/callback/?code=fakecode',
-            format='json'
+            "/api/v1/auth/google/callback/?code=fakecode", format="json"
         )
 
         assert response.status_code == 200
@@ -414,27 +475,29 @@ class TestGoogleOAuthView:
 
     @patch("apps.users.views.get_user_info")
     @patch("apps.users.views.exchange_code_for_tokens")
-    def test_google_callback_existing_email_does_not_duplicate(self, mock_exchange, mock_user_info, api_client):
+    def test_google_callback_existing_email_does_not_duplicate(
+        self, mock_exchange, mock_user_info, api_client
+    ):
         mock_exchange.return_value = {"access_token": "fake_access_token"}
         mock_user_info.return_value = {
             "email": "testuser@gmail.com",
             "given_name": "Test",
             "family_name": "User",
-            "sub": "google-123"
+            "sub": "google-123",
         }
-        User.objects.create_user(
-            email="existing@gmail.com",
-            username="existinguser"
+        User.objects.create_user(email="existing@gmail.com", username="existinguser")
+        response = api_client.get(
+            "/api/v1/auth/google/callback/?code=fakecode", format="json"
         )
-        response = api_client.get('/api/v1/auth/google/callback/?code=fakecode', format='json')
         assert response.status_code == 200
         assert User.objects.filter(email="existing@gmail.com").count() == 1
 
     def test_google_callback_no_code(self, api_client):
-        response = api_client.get('/api/v1/auth/google/callback/', format='json')
+        response = api_client.get("/api/v1/auth/google/callback/", format="json")
 
         assert response.status_code == 400
         assert "error" in response.data
+
 
 @pytest.mark.django_db
 class TestUserProfileView:
@@ -443,31 +506,34 @@ class TestUserProfileView:
         user = UserFactory(is_verified=True)
         api_client.force_authenticate(user=user)
 
-        response = api_client.get('/api/v1/users/me/', format='json')
+        response = api_client.get("/api/v1/users/me/", format="json")
 
-        assert response.status_code == 200 
+        assert response.status_code == 200
         assert "username" in response.data
         assert "first_name" in response.data
         assert "timezone" in response.data
 
-
     def test_get_profile_unauthenticated(self, api_client):
-        response = api_client.get('/api/v1/users/me/', format='json')
+        response = api_client.get("/api/v1/users/me/", format="json")
 
         assert response.status_code == 401
 
     def test_update_profile_success(self, api_client):
         user = UserFactory(is_verified=True)
         api_client.force_authenticate(user=user)
-        response = api_client.patch('/api/v1/users/me/', {'first_name': 'Updated'}, format='json')
+        response = api_client.patch(
+            "/api/v1/users/me/", {"first_name": "Updated"}, format="json"
+        )
         user.refresh_from_db()
-        assert user.first_name == 'Updated'
+        assert user.first_name == "Updated"
         assert response.status_code == 200
 
     def test_update_profile_invalid_timezone(self, api_client):
         user = UserFactory(is_verified=True)
         api_client.force_authenticate(user=user)
-        response = api_client.patch('/api/v1/users/me/', {'timezone': 'Africa'}, format='json')
+        response = api_client.patch(
+            "/api/v1/users/me/", {"timezone": "Africa"}, format="json"
+        )
 
         assert response.status_code == 400
 
@@ -475,14 +541,17 @@ class TestUserProfileView:
         user = UserFactory(is_verified=True)
         original_email = user.email
         api_client.force_authenticate(user=user)
-        response = api_client.patch('/api/v1/users/me/', {'email': 'newemail@example.com'}, format='json')
+        response = api_client.patch(
+            "/api/v1/users/me/", {"email": "newemail@example.com"}, format="json"
+        )
         user.refresh_from_db()
-        assert user.email == original_email  
+        assert user.email == original_email
         assert response.status_code == 200
 
     def test_update_profile_unauthenticated(self, api_client):
-        response = api_client.patch('/api/v1/users/me/', format='json')
-        assert response.status_code == 401        
+        response = api_client.patch("/api/v1/users/me/", format="json")
+        assert response.status_code == 401
+
 
 @pytest.mark.django_db(transaction=True)
 class TestAccountDeleteView:
@@ -491,35 +560,37 @@ class TestAccountDeleteView:
         user = UserFactory(is_verified=True)
         api_client.force_authenticate(user=user)
 
-        response = api_client.delete('/api/v1/users/me/delete/', format='json')
+        response = api_client.delete("/api/v1/users/me/delete/", format="json")
 
         assert response.status_code == 204
         user.refresh_from_db()
         assert not user.is_active
-        assert user.email == f'deleted_{user.id}@deleted.local'
+        assert user.email == f"deleted_{user.id}@deleted.local"
 
     def test_delete_account_unauthenticated(self, api_client):
-        response = api_client.delete('/api/v1/users/me/delete/', format='json')
+        response = api_client.delete("/api/v1/users/me/delete/", format="json")
         assert response.status_code == 401
 
     def test_delete_account_invalidates_tokens(self, api_client):
         # Skip this test on SQLite due to transaction isolation limitations
-        if connection.vendor == 'sqlite':
+        if connection.vendor == "sqlite":
             pytest.skip("Token blacklist test requires PostgreSQL")
-        
+
         user = User.objects.create_user(
-            username='johndoe',
-            email='john@example.com',
-            password='Secure123',
-            is_verified=True
+            username="johndoe",
+            email="john@example.com",
+            password="Secure123",
+            is_verified=True,
         )
         refresh = RefreshToken.for_user(user)
         access = str(refresh.access_token)
-        
-        api_client.credentials(HTTP_AUTHORIZATION=f'Bearer {access}')
-        response = api_client.delete('/api/v1/users/me/delete/', format='json')
+
+        api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+        response = api_client.delete("/api/v1/users/me/delete/", format="json")
         assert response.status_code == 204
-        
+
         api_client.credentials()
-        response = api_client.post('/api/v1/auth/token/refresh/', {'refresh': str(refresh)}, format='json')
+        response = api_client.post(
+            "/api/v1/auth/token/refresh/", {"refresh": str(refresh)}, format="json"
+        )
         assert response.status_code == 401

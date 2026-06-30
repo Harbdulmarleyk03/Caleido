@@ -5,13 +5,14 @@ from .models import User
 from django.urls import reverse
 from django.conf import settings
 
+
 @shared_task
 def send_verification_email(user_id):
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         return f"User with the id {user_id} does not exist"
-    
+
     token = generate_verification_token(user)
 
     path = reverse("verify-email")
@@ -39,13 +40,14 @@ def send_verification_email(user_id):
 
     return f"Verification email sent to {user.email}"
 
+
 @shared_task
 def send_password_reset_email(user_id):
     try:
         user = User.objects.get(id=user_id)
     except User.DoesNotExist:
         return f"User with the id {user_id} does not exist"
-    
+
     token = generate_password_reset_token(user)
 
     path = reverse("password-reset-confirm")

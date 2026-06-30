@@ -1,7 +1,9 @@
 from rest_framework.throttling import AnonRateThrottle
 
+
 class AuthRateThrottle(AnonRateThrottle):
-    scope = 'auth'
+    scope = "auth"
+
 
 class AnonSlotThrottle(AnonRateThrottle):
-    scope = 'anon_slot'
+    scope = "anon_slot"

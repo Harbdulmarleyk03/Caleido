@@ -109,7 +109,9 @@ class TestAnalyticsSignal:
 
         for period in PERIODS:
             key = build_analytics_cache_key(owner_id=owner.id, period=period)
-            assert cache.get(key) is None, f"Expected key for period '{period}' to be invalidated"
+            assert (
+                cache.get(key) is None
+            ), f"Expected key for period '{period}' to be invalidated"
 
     def test_booking_delete_invalidates_all_periods(self):
         booking = BookingFactory()
@@ -123,7 +125,9 @@ class TestAnalyticsSignal:
 
         for period in PERIODS:
             key = build_analytics_cache_key(owner_id=owner.id, period=period)
-            assert cache.get(key) is None, f"Expected key for period '{period}' to be invalidated"
+            assert (
+                cache.get(key) is None
+            ), f"Expected key for period '{period}' to be invalidated"
 
     def test_signal_only_invalidates_affected_owner(self):
         owner_a = UserFactory()
@@ -139,6 +143,7 @@ class TestAnalyticsSignal:
 
         # owner_b's cache must be untouched
         assert cache.get(key_b) == {"total_bookings": 5}
+
 
 @pytest.mark.django_db
 class TestAnalyticsView:

@@ -59,6 +59,7 @@ def custom_exception_handler(exc, context):
 # Exception conversion
 # ------------------------------------------------------------------
 
+
 def _convert_django_exception(exc):
     """
     Map Django core exceptions → DRF exceptions so they get
@@ -80,13 +81,14 @@ def _convert_django_exception(exc):
 # Unknown / unhandled exceptions (500s)
 # ------------------------------------------------------------------
 
+
 def _handle_unknown_exception(exc, context):
     """
     Called when DRF has no idea what the exception is.
     These are true 500 server errors — log the full traceback.
     """
-    view = context.get('view')
-    view_name = view.__class__.__name__ if view else 'Unknown'
+    view = context.get("view")
+    view_name = view.__class__.__name__ if view else "Unknown"
 
     # Log with full traceback so you can debug in Sentry / logs
     logger.exception(
@@ -97,9 +99,9 @@ def _handle_unknown_exception(exc, context):
 
     return Response(
         {
-            'error': 'server_error',
-            'message': 'An unexpected error occurred. Please try again later.',
-            'details': {},
+            "error": "server_error",
+            "message": "An unexpected error occurred. Please try again later.",
+            "details": {},
         },
         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
@@ -109,14 +111,15 @@ def _handle_unknown_exception(exc, context):
 # Response builder
 # ------------------------------------------------------------------
 
+
 def _build_error_response(exc, response):
     """
     Build the uniform error response dict from a DRF exception.
     """
     return {
-        'error': _get_error_code(exc, response.status_code),
-        'message': _get_message(exc, response.data),
-        'details': _get_details(exc, response.data),
+        "error": _get_error_code(exc, response.status_code),
+        "message": _get_message(exc, response.data),
+        "details": _get_details(exc, response.data),
     }
 
 
@@ -127,32 +130,32 @@ def _get_error_code(exc, status_code):
     """
     # Check specific exception types first
     if isinstance(exc, ValidationError):
-        return 'validation_error'
+        return "validation_error"
     if isinstance(exc, (AuthenticationFailed, NotAuthenticated)):
-        return 'authentication_failed'
+        return "authentication_failed"
     if isinstance(exc, PermissionDenied):
-        return 'permission_denied'
+        return "permission_denied"
     if isinstance(exc, NotFound):
-        return 'not_found'
+        return "not_found"
     if isinstance(exc, MethodNotAllowed):
-        return 'method_not_allowed'
+        return "method_not_allowed"
     if isinstance(exc, Throttled):
-        return 'throttled'
+        return "throttled"
     if isinstance(exc, ConflictError):
-        return 'conflict'
+        return "conflict"
 
     # Fall back to status code mapping
     mapping = {
-        400: 'bad_request',
-        401: 'authentication_failed',
-        403: 'permission_denied',
-        404: 'not_found',
-        405: 'method_not_allowed',
-        409: 'conflict',
-        429: 'throttled',
-        500: 'server_error',
+        400: "bad_request",
+        401: "authentication_failed",
+        403: "permission_denied",
+        404: "not_found",
+        405: "method_not_allowed",
+        409: "conflict",
+        429: "throttled",
+        500: "server_error",
     }
-    return mapping.get(status_code, 'error')
+    return mapping.get(status_code, "error")
 
 
 def _get_message(exc, data):
@@ -164,18 +167,18 @@ def _get_message(exc, data):
     if isinstance(exc, Throttled):
         wait = exc.wait
         if wait is not None:
-            return f'Request limit exceeded. Try again in {int(wait)} seconds.'
-        return 'Request limit exceeded. Try again later.'
+            return f"Request limit exceeded. Try again in {int(wait)} seconds."
+        return "Request limit exceeded. Try again later."
 
     if isinstance(data, dict):
         # DRF puts single-message errors under 'detail'
-        if 'detail' in data:
-            return str(data['detail'])
+        if "detail" in data:
+            return str(data["detail"])
         # Validation errors sometimes put errors under 'non_field_errors'
-        if 'non_field_errors' in data:
-            errors = data['non_field_errors']
-            return str(errors[0]) if errors else 'Invalid input.'
-        return 'Invalid input. Please check the details and try again.'
+        if "non_field_errors" in data:
+            errors = data["non_field_errors"]
+            return str(errors[0]) if errors else "Invalid input."
+        return "Invalid input. Please check the details and try again."
 
     if isinstance(data, list) and data:
         return str(data[0])
@@ -195,7 +198,7 @@ def _get_details(exc, data):
     }
     """
     # Single-message errors (detail key) have no field-level details
-    if isinstance(data, dict) and 'detail' in data:
+    if isinstance(data, dict) and "detail" in data:
         return {}
 
     # Validation errors — return the full field error dict
@@ -209,6 +212,7 @@ def _get_details(exc, data):
 # Custom exception classes
 # ------------------------------------------------------------------
 
+
 class ConflictError(APIException):
     """
     409 Conflict — used when a booking slot is already taken,
@@ -217,22 +221,24 @@ class ConflictError(APIException):
     Usage in a view or service:
         raise ConflictError("This time slot is no longer available.")
     """
+
     status_code = status.HTTP_409_CONFLICT
-    default_detail = 'A conflict occurred.'
-    default_code = 'conflict'
+    default_detail = "A conflict occurred."
+    default_code = "conflict"
 
 
 class ServiceUnavailableError(APIException):
     """
-    503 Service Unavailable — used when 
+    503 Service Unavailable — used when
     Redis, DB, celery is down.
 
     Usage:
         raise ServiceUnavailableError("DB is unavailable.")
     """
+
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-    default_detail = 'Service temporarily unavailable.'
-    default_code = 'service_unavailable'
+    default_detail = "Service temporarily unavailable."
+    default_code = "service_unavailable"
 
 
 class AppError(APIException):
@@ -257,6 +263,7 @@ class AppError(APIException):
     Example — raising with a custom message:
         raise AppError('Something specific went wrong.', code='specific_error')
     """
+
     status_code = status.HTTP_400_BAD_REQUEST
-    default_detail = 'An application error occurred.'
-    default_code = 'app_error' 
+    default_detail = "An application error occurred."
+    default_code = "app_error"

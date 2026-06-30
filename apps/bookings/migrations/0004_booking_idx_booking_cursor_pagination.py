@@ -7,15 +7,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('bookings', '0003_booking_reminder_1h_task_id_and_more'),
-        ('events', '0002_initial'),
-        ('payments', '0001_initial'),
+        ("bookings", "0003_booking_reminder_1h_task_id_and_more"),
+        ("events", "0002_initial"),
+        ("payments", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='booking',
-            index=models.Index(fields=['-start_time', 'id'], name='idx_booking_cursor_pagination'),
+            model_name="booking",
+            index=models.Index(
+                fields=["-start_time", "id"], name="idx_booking_cursor_pagination"
+            ),
         ),
     ]

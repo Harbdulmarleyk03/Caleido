@@ -30,7 +30,9 @@ class StripeRefund(AbstractBaseModel):
         ("failed", "Failed"),
     ]
 
-    payment = models.ForeignKey(StripePayment, on_delete=models.CASCADE, related_name="refunds", db_index=True)
+    payment = models.ForeignKey(
+        StripePayment, on_delete=models.CASCADE, related_name="refunds", db_index=True
+    )
     refund_id = models.CharField(max_length=255, unique=True)
     amount_cents = models.PositiveIntegerField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES)
@@ -45,7 +47,10 @@ class StripeRefund(AbstractBaseModel):
 
 class ProcessedStripeEvent(models.Model):
     """Idempotency guard — no updated_at needed, append-only."""
-    id = models.UUIDField(primary_key=True, default=__import__('uuid').uuid4, editable=False)
+
+    id = models.UUIDField(
+        primary_key=True, default=__import__("uuid").uuid4, editable=False
+    )
     stripe_event_id = models.CharField(max_length=255, unique=True)
     processed_at = models.DateTimeField(auto_now_add=True)
 

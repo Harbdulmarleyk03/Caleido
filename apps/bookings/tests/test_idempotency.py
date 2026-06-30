@@ -56,7 +56,9 @@ class TestCreateBookingInRedis:
         user = UserFactory()
         booking = BookingFactory()
         idempotency_key = "unique-key-002"
-        key = build_booking_cache_key(idempotency_key=idempotency_key, user_id=str(user.id))
+        key = build_booking_cache_key(
+            idempotency_key=idempotency_key, user_id=str(user.id)
+        )
 
         create_booking = MagicMock(return_value=booking)
 
@@ -73,7 +75,9 @@ class TestCreateBookingInRedis:
         user = UserFactory()
         booking = BookingFactory()
         idempotency_key = "unique-key-003"
-        key = build_booking_cache_key(idempotency_key=idempotency_key, user_id=str(user.id))
+        key = build_booking_cache_key(
+            idempotency_key=idempotency_key, user_id=str(user.id)
+        )
 
         # Simulate a completed prior request — cache holds the booking id
         cache.set(key, booking.id, timeout=CACHE_TIMEOUT)
@@ -92,7 +96,9 @@ class TestCreateBookingInRedis:
     def test_duplicate_request_while_in_progress_raises_conflict(self):
         user = UserFactory()
         idempotency_key = "unique-key-004"
-        key = build_booking_cache_key(idempotency_key=idempotency_key, user_id=str(user.id))
+        key = build_booking_cache_key(
+            idempotency_key=idempotency_key, user_id=str(user.id)
+        )
 
         # Simulate another request already holding the lock
         cache.set(key, "IN_PROGRESS", timeout=IN_PROGRESS_TIMEOUT)
@@ -131,7 +137,9 @@ class TestCreateBookingInRedis:
     def test_exception_in_create_booking_deletes_cache_key_and_reraises(self):
         user = UserFactory()
         idempotency_key = "unique-key-006"
-        key = build_booking_cache_key(idempotency_key=idempotency_key, user_id=str(user.id))
+        key = build_booking_cache_key(
+            idempotency_key=idempotency_key, user_id=str(user.id)
+        )
 
         create_booking = MagicMock(side_effect=ValueError("DB exploded"))
 

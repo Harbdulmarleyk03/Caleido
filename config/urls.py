@@ -14,22 +14,24 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/v1/users/', include('apps.users.urls.urls')),
-    path('api/v1/auth/', include('apps.users.urls.auth')),
-    path('api/v1/events/', include('apps.events.urls')),
-    path('api/v1/', include('apps.bookings.urls')),
-    path('api/v1/analytics/', include('apps.analytics.urls')),
-    path('api/v1/health/', include('apps.health.urls')),
+    path("admin/", admin.site.urls),
+    path("api/v1/users/", include("apps.users.urls.urls")),
+    path("api/v1/auth/", include("apps.users.urls.auth")),
+    path("api/v1/events/", include("apps.events.urls")),
+    path("api/v1/", include("apps.bookings.urls")),
+    path("api/v1/analytics/", include("apps.analytics.urls")),
+    path("api/v1/health/", include("apps.health.urls")),
 ]
 
 if settings.DEBUG:
     import debug_toolbar
+
     urlpatterns += [
-        path('__debug__/', include(debug_toolbar.urls)),
+        path("__debug__/", include(debug_toolbar.urls)),
     ]

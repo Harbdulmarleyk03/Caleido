@@ -7,11 +7,9 @@ from apps.analytics.cache import build_analytics_cache_key, PERIODS
 
 logger = logging.getLogger(__name__)
 
+
 @receiver([post_save, post_delete], sender=Booking)
 def invalidate_owner_analytics_cache(sender, instance, **kwargs):
     owner_id = instance.event_type.owner_id
     for period in PERIODS:
         cache.delete(build_analytics_cache_key(owner_id=owner_id, period=period))
-    
-
-   

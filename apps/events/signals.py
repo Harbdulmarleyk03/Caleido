@@ -9,21 +9,38 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
 @receiver([post_save, post_delete], sender=Booking)
 def invalidate_slot_cache(sender, instance, **kwargs):
-    from apps.events.models import EventType  
-    
+    from apps.events.models import EventType
+
     try:
-        owner_timezone = EventType.objects.values_list('owner__timezone', flat=True).get(pk=instance.event_type_id)
+        owner_timezone = EventType.objects.values_list(
+            "owner__timezone", flat=True
+        ).get(pk=instance.event_type_id)
     except EventType.DoesNotExist:
         return
 
-    cache.delete(build_slot_cache_key(event_type_id=instance.event_type_id, date=instance.start_time.date().isoformat(), timezone=owner_timezone))
+    cache.delete(
+        build_slot_cache_key(
+            event_type_id=instance.event_type_id,
+            date=instance.start_time.date().isoformat(),
+            timezone=owner_timezone,
+        )
+    )
 
-    audit = BookingAudit.objects.filter(
-        booking=instance, action='rescheduled').order_by('-changed_at').first()
+    audit = (
+        BookingAudit.objects.filter(booking=instance, action="rescheduled")
+        .order_by("-changed_at")
+        .first()
+    )
 
     if audit and audit.previous_data:
-        old_start = datetime.fromisoformat(audit.previous_data['start_time'])
-        cache.delete(build_slot_cache_key(
-            event_type_id=instance.event_type_id, date=old_start.date().isoformat(), timezone=owner_timezone))
+        old_start = datetime.fromisoformat(audit.previous_data["start_time"])
+        cache.delete(
+            build_slot_cache_key(
+                event_type_id=instance.event_type_id,
+                date=old_start.date().isoformat(),
+                timezone=owner_timezone,
+            )
+        )

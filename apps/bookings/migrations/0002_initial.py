@@ -10,59 +10,101 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('bookings', '0001_initial'),
-        ('events', '0001_initial'),
-        ('payments', '0001_initial'),
+        ("bookings", "0001_initial"),
+        ("events", "0001_initial"),
+        ("payments", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='booking',
-            name='assigned_to',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='assigned_bookings', to=settings.AUTH_USER_MODEL),
+            model_name="booking",
+            name="assigned_to",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="assigned_bookings",
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='booking',
-            name='event_type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='bookings', to='events.eventtype'),
+            model_name="booking",
+            name="event_type",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="bookings",
+                to="events.eventtype",
+            ),
         ),
         migrations.AddField(
-            model_name='booking',
-            name='stripe_payment',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='bookings', to='payments.stripepayment'),
+            model_name="booking",
+            name="stripe_payment",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="bookings",
+                to="payments.stripepayment",
+            ),
         ),
         migrations.AddField(
-            model_name='bookinganswer',
-            name='booking',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='answers', to='bookings.booking'),
+            model_name="bookinganswer",
+            name="booking",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="answers",
+                to="bookings.booking",
+            ),
         ),
         migrations.AddField(
-            model_name='bookinganswer',
-            name='question',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='answers', to='events.eventtypequestion'),
+            model_name="bookinganswer",
+            name="question",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="answers",
+                to="events.eventtypequestion",
+            ),
         ),
         migrations.AddField(
-            model_name='bookingaudit',
-            name='booking',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='audit_logs', to='bookings.booking'),
+            model_name="bookingaudit",
+            name="booking",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="audit_logs",
+                to="bookings.booking",
+            ),
         ),
         migrations.AddField(
-            model_name='bookingaudit',
-            name='changed_by',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL),
+            model_name="bookingaudit",
+            name="changed_by",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to=settings.AUTH_USER_MODEL,
+            ),
         ),
         migrations.AddField(
-            model_name='invitee',
-            name='booking',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='invitee', to='bookings.booking'),
+            model_name="invitee",
+            name="booking",
+            field=models.OneToOneField(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="invitee",
+                to="bookings.booking",
+            ),
         ),
         migrations.AddIndex(
-            model_name='booking',
-            index=models.Index(fields=['event_type', 'start_time', 'status'], name='idx_booking_conflict_check'),
+            model_name="booking",
+            index=models.Index(
+                fields=["event_type", "start_time", "status"],
+                name="idx_booking_conflict_check",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='bookinganswer',
-            constraint=models.UniqueConstraint(fields=('booking', 'question'), name='unique_booking_question'),
+            model_name="bookinganswer",
+            constraint=models.UniqueConstraint(
+                fields=("booking", "question"), name="unique_booking_question"
+            ),
         ),
     ]

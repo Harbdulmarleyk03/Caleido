@@ -2,9 +2,11 @@ import secrets
 import urllib.parse
 import requests
 from django.conf import settings
+
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 
 GOOGLE_AUTH_BASE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+
 
 def get_google_auth_url():
     state = secrets.token_urlsafe(32)
@@ -21,6 +23,7 @@ def get_google_auth_url():
     url = f"{GOOGLE_AUTH_BASE_URL}?{urllib.parse.urlencode(params)}"
     return url, state
 
+
 def exchange_code_for_tokens(code):
     data = {
         "code": code,
@@ -34,7 +37,11 @@ def exchange_code_for_tokens(code):
 
     return response.json()
 
+
 def get_user_info(access_token):
-    response = requests.get("https://www.googleapis.com/oauth2/v3/userinfo", headers={"Authorization": f"Bearer {access_token}"})
+    response = requests.get(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
     response.raise_for_status()
     return response.json()
