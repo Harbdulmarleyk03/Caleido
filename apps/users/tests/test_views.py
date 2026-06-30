@@ -399,7 +399,7 @@ class TestGoogleOAuthView:
         
     @patch("apps.users.views.get_user_info")
     @patch("apps.users.views.exchange_code_for_tokens")
-    def test_google_callback_new_user(self, mock_exchange, mock_user_info, api_client):
+    def test_google_callback_creates_new_user(self, mock_exchange, mock_user_info, api_client):
         mock_exchange.return_value = {"access_token": "fake_access_token"}
         mock_user_info.return_value = {
             "email": "testuser@gmail.com",
@@ -420,7 +420,7 @@ class TestGoogleOAuthView:
 
     @patch("apps.users.views.get_user_info")
     @patch("apps.users.views.exchange_code_for_tokens")
-    def test_google_callback_new_user(self, mock_exchange, mock_user_info, api_client):
+    def test_google_callback_existing_email_does_not_duplicate(self, mock_exchange, mock_user_info, api_client):
         mock_exchange.return_value = {"access_token": "fake_access_token"}
         mock_user_info.return_value = {
             "email": "testuser@gmail.com",
