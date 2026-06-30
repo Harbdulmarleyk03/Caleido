@@ -2,7 +2,6 @@ from .models import User, OAuthProvider
 from .tasks import send_verification_email
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import AuthenticationFailed, PermissionDenied
-from .google_client import get_user_info
 from django.db import transaction
 
 class AuthService:

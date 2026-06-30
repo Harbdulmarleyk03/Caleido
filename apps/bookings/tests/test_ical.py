@@ -95,6 +95,5 @@ class TestBookingIcalView:
         assert response.status_code == 403
 
     def test_nonexistent_booking_returns_404(self, auth_client):
-        booking = "Non-existing booking"
         response = auth_client.get(f'/api/v1/bookings/{uuid.uuid4()}/ical/')
         assert response.status_code == 404

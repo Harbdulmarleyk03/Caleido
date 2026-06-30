@@ -1,7 +1,6 @@
 import pytest
 from apps.bookings.services import BookingService
 from django.urls import reverse
-from rest_framework.test import APIClient
 from apps.events.models import EventType
 from apps.users.tests.factories import UserFactory
 from datetime import datetime, timedelta

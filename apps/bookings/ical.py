@@ -1,6 +1,5 @@
 from icalendar import Calendar, Event
 from django.conf import settings
-from pytz import utc
 from django.utils import timezone
 
 class IcalExportService:

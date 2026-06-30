@@ -1,6 +1,4 @@
 from .base import *  # noqa
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
 
 DEBUG = False
 SECRET_KEY = env("SECRET_KEY")

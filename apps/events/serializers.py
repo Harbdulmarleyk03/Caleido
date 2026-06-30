@@ -59,7 +59,7 @@ class DateOverrideSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         is_unavailable = data.get('is_unavailable')
-        if is_unavailable == False:
+        if not is_unavailable:
             custom_start = data.get('custom_start')
             custom_end = data.get('custom_end')
             if custom_start is None or custom_end is None:

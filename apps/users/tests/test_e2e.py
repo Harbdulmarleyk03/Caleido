@@ -23,7 +23,7 @@ class TestAuthE2EFlow:
         verify_email_response = api_client.get('/api/v1/auth/verify-email/', {'token': str(token)})
         assert verify_email_response.status_code == 200 
         user.refresh_from_db()
-        assert user.is_verified == True 
+        assert user.is_verified 
 
         login_response = api_client.post('/api/v1/auth/login/', {"email": "john@example.com", "password": "Secure123"})
 

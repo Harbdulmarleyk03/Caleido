@@ -198,7 +198,7 @@ class TestBookingIntegration:
             invitee_notes=None,
             user=other_user,
         )        
-        token_2 = generate_cancel_token(booking)
+        generate_cancel_token(booking)
         url = reverse('booking-cancel', args=[booking.id])
         response = api_client.patch(url, {'token': str(token_1)}, format='json')
         assert response.status_code == 401

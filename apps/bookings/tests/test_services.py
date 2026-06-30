@@ -1,7 +1,5 @@
 import pytest 
 from apps.bookings.services import BookingService
-from django.core import mail 
-from apps.bookings.tasks import send_booking_reminder_email, send_booking_cancellation_email, send_booking_reschedule_email
 from unittest.mock import patch
 from datetime import timedelta
 from django.utils import timezone

@@ -2,7 +2,7 @@ import pytest
 from apps.events.models import EventType
 from datetime import timedelta
 from django.utils import timezone
-from apps.bookings.tests.factories import InviteeFactory, BookingFactory
+from apps.bookings.tests.factories import BookingFactory
 
 @pytest.fixture
 def event_type(owner):

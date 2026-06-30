@@ -26,7 +26,7 @@ class TestRegisterView:
         assert User.objects.filter(email='john@example.com').exists()
         user = User.objects.get(email='john@example.com')
         assert user.check_password('Secure123')  # confirms password was hashed
-        assert user.is_verified == False
+        assert not user.is_verified
 
     def test_register_duplicate_email(self, api_client):
         User.objects.create_user(
@@ -81,7 +81,7 @@ class TestRegisterView:
 class TestLoginView:
 
     def test_login_success(self, api_client):
-        user = User.objects.create_user(
+        User.objects.create_user(
             username='johndoe',
             email="john@example.com",
             password="Secure123",
@@ -201,7 +201,7 @@ class TestLogoutView:
         from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
         
         refresh1 = RefreshToken.for_user(user)
-        refresh2 = RefreshToken.for_user(user)
+        RefreshToken.for_user(user)
         
         # Directly blacklist all tokens for user
         tokens = OutstandingToken.objects.filter(user=user)
@@ -247,7 +247,7 @@ class TestEmailVerificationView:
         response = api_client.get('/api/v1/auth/verify-email/', {'token': str(token)}, format='json')
         user.refresh_from_db()
 
-        assert user.is_verified == True 
+        assert user.is_verified 
         assert response.status_code == 200
 
     def test_verify_email_invalid_token(self, api_client):
@@ -358,8 +358,7 @@ class TestPasswordResetView:
             "password": "Secure123",
         }
 
-        old_password = data['password']
-        new_password = "NewSecure456"
+        data['password']
 
         api_client.force_authenticate(user=user)
 
@@ -375,11 +374,6 @@ class TestPasswordResetView:
             password="Secure123",
             is_verified=True
         )
-        data = {
-            'username': 'johndoe',
-            "email": "john@example.com",
-            "password": "Secure123",
-        }
 
         api_client.force_authenticate(user=user)
 
@@ -501,7 +495,7 @@ class TestAccountDeleteView:
 
         assert response.status_code == 204
         user.refresh_from_db()
-        assert user.is_active == False
+        assert not user.is_active
         assert user.email == f'deleted_{user.id}@deleted.local'
 
     def test_delete_account_unauthenticated(self, api_client):

@@ -113,7 +113,7 @@ class TestCreateBookingInRedis:
         between cache.add() returning False and cache.get() reading it."""
         user = UserFactory()
         idempotency_key = "unique-key-005"
-        key = build_booking_cache_key(idempotency_key=idempotency_key, user_id=str(user.id))
+        build_booking_cache_key(idempotency_key=idempotency_key, user_id=str(user.id))
 
         # cache.add() will fail because key exists, then cache.get() returns None
         # Simulate: key exists (so add fails) but get returns None (expired race)
