@@ -100,8 +100,10 @@ class TestRaceConditions:
            
         t1 = threading.Thread(target=attempt_booking, args=('key-001',))
         t2 = threading.Thread(target=attempt_booking, args=('key-002',))
-        t1.start(); t2.start()
-        t1.join(); t2.join()
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
 
         assert len(results) == 1
         assert len(errors) == 1

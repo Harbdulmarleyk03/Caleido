@@ -68,7 +68,6 @@ class BookingViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'], url_path='cancel', permission_classes=[CancelBookingPermission])
     def cancel(self, request, pk=None):
-        token = request.data.get('token') or request.query_params.get('token')
         booking = get_object_or_404(Booking.objects.select_related('event_type'), pk=pk)        
         self.check_object_permissions(request, booking)
         BookingService.cancel_booking(booking=booking, user=request.user)

@@ -1,5 +1,6 @@
 import environ
 from pathlib import Path
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -78,7 +79,6 @@ REST_FRAMEWORK = {
 
     'EXCEPTION_HANDLER': 'common.exceptions.custom_exception_handler',
 }
-from datetime import timedelta
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),

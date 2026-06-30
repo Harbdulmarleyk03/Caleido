@@ -30,7 +30,7 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            user = auth_service.register_user(serializer.validated_data)
+            auth_service.register_user(serializer.validated_data)
             return Response({'detail': 'User registered successfully. Please check your email to verify your account.'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
