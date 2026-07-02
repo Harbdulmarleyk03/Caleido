@@ -186,6 +186,17 @@ AUTH_PASSWORD_VALIDATORS = [
 
 ICAL_UID_DOMAIN = env("ICAL_UID_DOMAIN", default="caleido.com")
 
+# Sentry error tracking.
+# NOTE: this only *declares* the settings — no sentry_sdk.init() call lives
+# here, deliberately, because base.py is imported by testing.py. If init()
+# were here, every pytest run and every CI job would attempt to initialize
+# the SDK. The actual init() call lives in production.py only, which
+# testing.py never imports. SENTRY_DSN defaults to "" (disabled) so any
+# environment that doesn't explicitly set it — dev, testing, CI — is safe
+# by construction, not by convention.
+SENTRY_DSN = env("SENTRY_DSN", default="")
+SENTRY_ENVIRONMENT = env("SENTRY_ENVIRONMENT", default="production")
+
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
