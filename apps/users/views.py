@@ -24,9 +24,29 @@ from .tokens import verify_verification_token, verify_password_reset_token
 from django.core.cache import cache
 from .tasks import send_verification_email, send_password_reset_email
 from .google_client import exchange_code_for_tokens, get_google_auth_url, get_user_info
+from drf_spectacular.utils import (
+    extend_schema,
+    OpenApiParameter,
+    OpenApiResponse,
+    inline_serializer,
+)
+from drf_spectacular.types import OpenApiTypes
+from rest_framework import serializers as drf_serializers
 
 User = get_user_model()
 auth_service = AuthService()
+
+# Shared shape for the {error, message, details} envelope common/exceptions.py
+# always returns on 4xx/5xx — reused across every schema below rather than
+# redefined per view.
+ErrorResponseSerializer = inline_serializer(
+    name="ErrorResponse",
+    fields={
+        "error": drf_serializers.CharField(),
+        "message": drf_serializers.CharField(),
+        "details": drf_serializers.DictField(required=False),
+    },
+)
 
 
 class RegisterView(APIView):
@@ -50,6 +70,25 @@ class RegisterView(APIView):
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="token",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Signed email-verification token (24h expiry, salt='verify-email').",
+            )
+        ],
+        responses={
+            200: inline_serializer(
+                name="VerifyEmailSuccess",
+                fields={"detail": drf_serializers.CharField()},
+            ),
+            400: ErrorResponseSerializer,
+        },
+        description="Verifies a user's email using a signed, time-limited token sent at registration.",
+    )
     def get(self, request):
         token = request.query_params.get("token")
         if not token:
@@ -133,6 +172,26 @@ class TokenRefreshView(APIView):
     permission_classes = [AllowAny]
     renderer_classes = [JSONRenderer]
 
+    @extend_schema(
+        request=inline_serializer(
+            name="TokenRefreshRequest",
+            fields={"refresh": drf_serializers.CharField()},
+        ),
+        responses={
+            200: inline_serializer(
+                name="TokenRefreshResponse",
+                fields={
+                    "new_access": drf_serializers.CharField(),
+                    "new_refresh": drf_serializers.CharField(),
+                },
+            ),
+            401: OpenApiResponse(description="Invalid or expired refresh token."),
+        },
+        description=(
+            "Rotates a refresh token: blacklists the old one after issuing a new "
+            "access/refresh pair (ROTATE_REFRESH_TOKENS + BLACKLIST_AFTER_ROTATION)."
+        ),
+    )
     def post(self, request):
         refresh_token = request.data.get("refresh")
         if not refresh_token:
@@ -156,6 +215,17 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
 
+    @extend_schema(
+        request=inline_serializer(
+            name="LogoutRequest",
+            fields={"refresh": drf_serializers.CharField()},
+        ),
+        responses={
+            204: OpenApiResponse(description="Refresh token blacklisted."),
+            400: ErrorResponseSerializer,
+        },
+        description="Blacklists the given refresh token, ending that single session.",
+    )
     def post(self, request):
         refresh = request.data.get("refresh")
         if not refresh:
@@ -177,6 +247,11 @@ class LogoutView(APIView):
 class LogoutAllView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={204: OpenApiResponse(description="All outstanding tokens for this user blacklisted.")},
+        description="Blacklists every outstanding refresh token belonging to the authenticated user.",
+    )
     def post(self, request):
         tokens = OutstandingToken.objects.filter(user=request.user)
         for outstanding_token in tokens:
@@ -251,6 +326,15 @@ class ChangePasswordView(APIView):
 class GoogleOAuthRedirectView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        responses={
+            200: inline_serializer(
+                name="GoogleOAuthRedirectResponse",
+                fields={"url": drf_serializers.URLField()},
+            )
+        },
+        description="Returns the Google OAuth2 consent-screen URL the client should redirect the user to.",
+    )
     def get(self, request):
         url, state = get_google_auth_url()
         return Response({"url": url}, status=status.HTTP_200_OK)
@@ -259,6 +343,31 @@ class GoogleOAuthRedirectView(APIView):
 class GoogleOAuthCallbackView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="code",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Authorization code returned by Google after user consent.",
+            )
+        ],
+        responses={
+            200: inline_serializer(
+                name="GoogleOAuthCallbackResponse",
+                fields={
+                    "access": drf_serializers.CharField(),
+                    "refresh": drf_serializers.CharField(),
+                },
+            ),
+            400: ErrorResponseSerializer,
+        },
+        description=(
+            "Exchanges a Google authorization code for tokens, upserts the user "
+            "(provider_uid → email → create), and returns a Caleido JWT pair."
+        ),
+    )
     def get(self, request):
         code = request.query_params.get("code")
         if not code:
@@ -295,6 +404,11 @@ class UserProfileView(RetrieveUpdateAPIView):
 class AccountDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        request=None,
+        responses={204: OpenApiResponse(description="Account soft-deleted: PII anonymised, tokens blacklisted.")},
+        description="Soft-deletes the authenticated user's account.",
+    )
     def delete(self, request):
         user = request.user
         tokens = OutstandingToken.objects.filter(user=user)

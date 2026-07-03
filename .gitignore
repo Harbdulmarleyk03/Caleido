@@ -225,4 +225,4 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-test_db.sqlite3
+test_db.sqlite3schema.yml
