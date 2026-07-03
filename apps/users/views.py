@@ -249,7 +249,11 @@ class LogoutAllView(APIView):
 
     @extend_schema(
         request=None,
-        responses={204: OpenApiResponse(description="All outstanding tokens for this user blacklisted.")},
+        responses={
+            204: OpenApiResponse(
+                description="All outstanding tokens for this user blacklisted."
+            )
+        },
         description="Blacklists every outstanding refresh token belonging to the authenticated user.",
     )
     def post(self, request):
@@ -406,7 +410,11 @@ class AccountDeleteView(APIView):
 
     @extend_schema(
         request=None,
-        responses={204: OpenApiResponse(description="Account soft-deleted: PII anonymised, tokens blacklisted.")},
+        responses={
+            204: OpenApiResponse(
+                description="Account soft-deleted: PII anonymised, tokens blacklisted."
+            )
+        },
         description="Soft-deletes the authenticated user's account.",
     )
     def delete(self, request):

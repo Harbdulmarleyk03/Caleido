@@ -122,7 +122,9 @@ class BookingIcalView(APIView):
                 response=OpenApiTypes.BINARY,
                 description="RFC 5545 .ics file for this booking, served as a download.",
             ),
-            403: OpenApiResponse(description="Requester is not the owner of this booking's event type."),
+            403: OpenApiResponse(
+                description="Requester is not the owner of this booking's event type."
+            ),
             404: OpenApiResponse(description="Booking not found."),
         },
         description="Exports a single booking as a downloadable .ics calendar file.",

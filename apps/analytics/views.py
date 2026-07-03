@@ -31,7 +31,11 @@ class AnalyticsAPIView(APIView):
             200: OpenApiTypes.OBJECT,
             400: inline_serializer(
                 name="AnalyticsError",
-                fields={"period": drf_serializers.ListField(child=drf_serializers.CharField())},
+                fields={
+                    "period": drf_serializers.ListField(
+                        child=drf_serializers.CharField()
+                    )
+                },
             ),
         },
         description="Owner-facing booking analytics (counts, trends) for the given period, cached 600s.",
