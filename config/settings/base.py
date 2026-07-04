@@ -31,6 +31,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_filters",
     "django_extensions",
+    "drf_spectacular",
 ]
 
 LOCAL_APPS = [
@@ -73,6 +74,23 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "EXCEPTION_HANDLER": "common.exceptions.custom_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Caleido API",
+    "DESCRIPTION": (
+        "Production-grade scheduling platform API — JWT + Google OAuth2 auth, "
+        "race-condition-safe bookings, Redis-cached availability, async "
+        "reminders via Celery, RFC 5545 iCal export."
+    ),
+    "VERSION": "1.0.0",
+    # False: the schema endpoint itself isn't part of the schema it describes.
+    "SERVE_INCLUDE_SCHEMA": False,
+    # Only document api/v1/* — excludes Django admin and any future
+    # non-API routes from ever leaking into the public schema.
+    "SCHEMA_PATH_PREFIX": r"/api/v1",
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 SIMPLE_JWT = {

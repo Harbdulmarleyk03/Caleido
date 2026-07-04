@@ -23,6 +23,8 @@ from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 from apps.bookings.ical import IcalExportService
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.types import OpenApiTypes
 
 
 class BookingViewSet(viewsets.ModelViewSet):
@@ -114,6 +116,19 @@ class BookingViewSet(viewsets.ModelViewSet):
 class BookingIcalView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        responses={
+            (200, "text/calendar"): OpenApiResponse(
+                response=OpenApiTypes.BINARY,
+                description="RFC 5545 .ics file for this booking, served as a download.",
+            ),
+            403: OpenApiResponse(
+                description="Requester is not the owner of this booking's event type."
+            ),
+            404: OpenApiResponse(description="Booking not found."),
+        },
+        description="Exports a single booking as a downloadable .ics calendar file.",
+    )
     def get(self, request, booking_id):
         booking = get_object_or_404(
             Booking.objects.select_related("event_type__owner", "invitee"),

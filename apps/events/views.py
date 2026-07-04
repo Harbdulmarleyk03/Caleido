@@ -27,6 +27,9 @@ from common.pagination import (
     DateOverrideCursorPagination,
     EventTypeCursorPagination,
 )
+from drf_spectacular.utils import extend_schema, OpenApiParameter, inline_serializer
+from drf_spectacular.types import OpenApiTypes
+from rest_framework import serializers as drf_serializers
 
 
 # Event Type Views
@@ -197,6 +200,45 @@ class DateOverrideDetailView(generics.RetrieveDestroyAPIView):
 class SlotListView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="date",
+                type=OpenApiTypes.DATE,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Date to compute available slots for, YYYY-MM-DD.",
+            ),
+            OpenApiParameter(
+                name="timezone",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                default="UTC",
+                description="IANA timezone the returned slot times are expressed in.",
+            ),
+        ],
+        responses={
+            200: inline_serializer(
+                name="SlotListResponse",
+                fields={
+                    "slots": drf_serializers.ListField(
+                        child=drf_serializers.DictField()
+                    )
+                },
+            ),
+            400: inline_serializer(
+                name="SlotListError",
+                fields={"error": drf_serializers.CharField()},
+            ),
+        },
+        description=(
+            "Computes available booking slots for an event type on a given date, "
+            "honoring availability rules, date overrides, existing bookings, "
+            "buffers, and minimum notice. Cached 60s, keyed on owner timezone. "
+            "Public endpoint — no authentication required."
+        ),
+    )
     def get(self, request, event_type_id):
         date_str = request.query_params.get("date")
         if date_str is None:
