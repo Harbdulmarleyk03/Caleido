@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from apps.bookings.models import Booking
 from apps.bookings.serializers import (
@@ -23,9 +23,27 @@ from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 from apps.bookings.ical import IcalExportService
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.types import OpenApiTypes
 
 
-class BookingViewSet(viewsets.ModelViewSet):
+class BookingViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
+    # Deliberately NOT ModelViewSet — that bundles UpdateModelMixin and
+    # DestroyModelMixin, which would wire PUT/PATCH/DELETE onto the base
+    # /bookings/{id}/ route. Bookings are never overwritten wholesale or
+    # hard-deleted; they're only ever cancelled or rescheduled via the
+    # explicit @action endpoints below. Before this fix, a PUT/PATCH/DELETE
+    # to the base detail route would reach get_serializer_class(), fall
+    # through its implicit `return None` for unhandled actions, and crash
+    # with 'NoneType' object is not callable — a real 500 in production,
+    # not just a schema-generation artifact. Only inheriting the mixins we
+    # actually support means DRF's router now returns a correct 405 Method
+    # Not Allowed for those verbs instead.
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = BookingFilter
     ordering_fields = ["start_time", "id"]
@@ -114,6 +132,19 @@ class BookingViewSet(viewsets.ModelViewSet):
 class BookingIcalView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        responses={
+            (200, "text/calendar"): OpenApiResponse(
+                response=OpenApiTypes.BINARY,
+                description="RFC 5545 .ics file for this booking, served as a download.",
+            ),
+            403: OpenApiResponse(
+                description="Requester is not the owner of this booking's event type."
+            ),
+            404: OpenApiResponse(description="Booking not found."),
+        },
+        description="Exports a single booking as a downloadable .ics calendar file.",
+    )
     def get(self, request, booking_id):
         booking = get_object_or_404(
             Booking.objects.select_related("event_type__owner", "invitee"),
