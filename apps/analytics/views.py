@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from apps.analytics.cache import PERIODS
 from rest_framework.exceptions import ValidationError
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 from apps.analytics.serializers import AnalyticsResponseSerializer
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
 
 
 class AnalyticsAPIView(APIView):
