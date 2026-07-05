@@ -4,10 +4,28 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from apps.analytics.cache import PERIODS
 from rest_framework.exceptions import ValidationError
-
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from apps.analytics.serializers import AnalyticsResponseSerializer
 
 class AnalyticsAPIView(APIView):
     permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="period",
+                type=str,
+                required=False,
+                enum=list(PERIODS),
+                default="all",
+                description="Aggregation window for the analytics query.",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(response=AnalyticsResponseSerializer, description="Aggregated booking analytics for the authenticated owner"),
+            400: OpenApiResponse(description="Invalid period value"),
+        },
+    )
 
     def get(self, request):
         owner = request.user
