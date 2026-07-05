@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from common.serializers import TimezoneField
 from django.contrib.auth import get_user_model
+from drf_spectacular.utils import extend_schema_field
 
 User = get_user_model()
 
@@ -100,7 +101,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "date_joined",
             "full_name",
         ]
-
+    @extend_schema_field(serializers.CharField())
     def get_full_name(self, obj):
         return obj.get_full_name()
 

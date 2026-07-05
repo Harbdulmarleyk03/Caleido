@@ -24,6 +24,8 @@ from .tokens import verify_verification_token, verify_password_reset_token
 from django.core.cache import cache
 from .tasks import send_verification_email, send_password_reset_email
 from .google_client import exchange_code_for_tokens, get_google_auth_url, get_user_info
+from drf_spectacular.utils import extend_schema, OpenApiResponse
+
 
 User = get_user_model()
 auth_service = AuthService()
@@ -46,7 +48,7 @@ class RegisterView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+@extend_schema(responses={200: OpenApiResponse(description="Email verified")})
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
@@ -128,7 +130,10 @@ class LoginView(APIView):
             {"access": str(access), "refresh": str(refresh)}, status=status.HTTP_200_OK
         )
 
-
+@extend_schema(
+    request={"application/json": {"type": "object", "properties": {"refresh": {"type": "string"}}}},
+    responses={200: OpenApiResponse(description="New access/refresh pair")},
+)
 class TokenRefreshView(APIView):
     permission_classes = [AllowAny]
     renderer_classes = [JSONRenderer]
@@ -151,7 +156,8 @@ class TokenRefreshView(APIView):
                 {"error": "Invalid/expired token"}, status=status.HTTP_401_UNAUTHORIZED
             )
 
-
+@extend_schema(request={"application/json": {"type": "object", "properties": {"refresh": {"type": "string"}}}},
+               responses={204: None})
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
     renderer_classes = [JSONRenderer]
@@ -173,7 +179,7 @@ class LogoutView(APIView):
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
+@extend_schema(request=None, responses={204: None})
 class LogoutAllView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -247,7 +253,7 @@ class ChangePasswordView(APIView):
             {"detail": "Password changed successfully"}, status=status.HTTP_200_OK
         )
 
-
+@extend_schema(request=None, responses={200: OpenApiResponse(description="Access to Google's OAuth consent screen")})
 class GoogleOAuthRedirectView(APIView):
     permission_classes = [AllowAny]
 
@@ -255,7 +261,7 @@ class GoogleOAuthRedirectView(APIView):
         url, state = get_google_auth_url()
         return Response({"url": url}, status=status.HTTP_200_OK)
 
-
+@extend_schema(responses={200: OpenApiResponse(description="JWT pair on success")})
 class GoogleOAuthCallbackView(APIView):
     permission_classes = [AllowAny]
 
@@ -291,7 +297,7 @@ class UserProfileView(RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user
 
-
+@extend_schema(request=None, responses={204: None})
 class AccountDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -9,6 +9,7 @@ from apps.events.serializers import (
     EventTypeUpdateSerializer,
     AvailabilityRuleSerializer,
     DateOverrideSerializer,
+    SlotSerializer,
 )
 from django.shortcuts import get_object_or_404
 from rest_framework.renderers import JSONRenderer, BrowsableAPIRenderer
@@ -27,7 +28,7 @@ from common.pagination import (
     DateOverrideCursorPagination,
     EventTypeCursorPagination,
 )
-
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 
 # Event Type Views
 class EventTypeViewSet(viewsets.ModelViewSet):
@@ -45,23 +46,21 @@ class EventTypeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self, *args, **kwargs):
 
         if self.action == "create":
-            serializer_class = EventTypeSerializer
-            return serializer_class
+            return EventTypeSerializer
 
         elif self.action == "list":
-            serializer_class = EventTypeListSerializer
-            return serializer_class
+            return EventTypeListSerializer
 
         elif self.action == "retrieve":
-            serializer_class = EventTypeDetailSerializer
-            return serializer_class
+            return EventTypeDetailSerializer
 
         elif self.action in ["update", "partial_update"]:
-            serializer_class = EventTypeUpdateSerializer
-            return serializer_class
+            return EventTypeUpdateSerializer
         return EventTypeSerializer
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return EventType.objects.none()
         return EventType.objects.filter(owner=self.request.user)
 
     def create(self, request):
@@ -128,12 +127,15 @@ class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
         return self._event_type
 
     def get_serializer_context(self):
-        # Injects event_type so the serializer can do overlap validation
         context = super().get_serializer_context()
-        context["event_type"] = self.get_event_type()
+        # Injects event_type so the serializer can do overlap validation
+        if not getattr(self, "swagger_fake_view", False):
+            context["event_type"] = self.get_event_type()
         return context
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return AvailabilityRule.objects.none()
         return AvailabilityRule.objects.filter(event_type=self.get_event_type())
 
     def perform_create(self, serializer):
@@ -170,10 +172,13 @@ class DateOverrideListCreateView(generics.ListCreateAPIView):
     def get_serializer_context(self):
         # Injects event_type so the serializer can do overlap validation
         context = super().get_serializer_context()
-        context["event_type"] = self.get_event_type()
+        if not getattr(self, "swagger_fake_view", False):
+            context["event_type"] = self.get_event_type()
         return context
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return DateOverride.objects.none()
         return DateOverride.objects.filter(event_type=self.get_event_type())
 
     def perform_create(self, serializer):
@@ -197,6 +202,13 @@ class DateOverrideDetailView(generics.RetrieveDestroyAPIView):
 class SlotListView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter("date", str, description="YYYY-MM-DD"),
+            OpenApiParameter("timezone", str, required=False, default="UTC"),
+        ],
+        responses={200: SlotSerializer(many=True)},
+    )
     def get(self, request, event_type_id):
         date_str = request.query_params.get("date")
         if date_str is None:

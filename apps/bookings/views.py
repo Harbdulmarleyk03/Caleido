@@ -60,12 +60,17 @@ class BookingViewSet(
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
-
+        
     def get_serializer_class(self):
         if self.action == "create":
             return CreateBookingSerializer
         elif self.action in ["list", "retrieve"]:
             return BookingSerializer
+        elif self.action == "reschedule":
+            return RescheduleBookingSerializer
+        elif self.action == "cancel":
+            return BookingSerializer  # no body; used for schema/introspection only
+        return BookingSerializer
 
     def create(self, request):
         data = request.data.copy()
@@ -93,6 +98,8 @@ class BookingViewSet(
         )
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return Booking.objects.none()
         return Booking.objects.filter(
             event_type__owner=self.request.user
         ).select_related("event_type", "invitee")
@@ -103,6 +110,7 @@ class BookingViewSet(
         url_path="cancel",
         permission_classes=[CancelBookingPermission],
     )
+    @extend_schema(request=None, responses={200: OpenApiResponse(description="Cancelled")})
     def cancel(self, request, pk=None):
         booking = get_object_or_404(Booking.objects.select_related("event_type"), pk=pk)
         self.check_object_permissions(request, booking)
@@ -115,6 +123,7 @@ class BookingViewSet(
         url_path="reschedule",
         permission_classes=[RescheduleBookingPermission],
     )
+    @extend_schema(responses={200: OpenApiResponse(description="Rescheduled")})
     def reschedule(self, request, pk=None):
         booking = get_object_or_404(Booking.objects.select_related("event_type"), pk=pk)
         self.check_object_permissions(request, booking)
