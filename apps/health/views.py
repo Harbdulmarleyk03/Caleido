@@ -13,8 +13,13 @@ class HealthAPIView(APIView):
     @extend_schema(
         request=None,
         responses={
-            200: OpenApiResponse(response=HealthCheckSerializer, description="All dependencies healthy"),
-            503: OpenApiResponse(response=HealthCheckSerializer, description="One or more dependencies failing"),
+            200: OpenApiResponse(
+                response=HealthCheckSerializer, description="All dependencies healthy"
+            ),
+            503: OpenApiResponse(
+                response=HealthCheckSerializer,
+                description="One or more dependencies failing",
+            ),
         },
         description="Readiness probe — checks DB, Redis, and Celery worker connectivity.",
     )
