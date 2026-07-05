@@ -1,0 +1,2007 @@
+openapi: 3.0.3
+info:
+  title: Caleido API
+  version: 1.0.0
+  description: Production-grade scheduling platform API — JWT + Google OAuth2 auth,
+    race-condition-safe bookings, Redis-cached availability, async reminders via Celery,
+    RFC 5545 iCal export.
+paths:
+  /api/v1/analytics/analytics/:
+    get:
+      operationId: analytics_analytics_retrieve
+      parameters:
+      - in: query
+        name: period
+        schema:
+          type: string
+          enum:
+          - 30d
+          - 7d
+          - 90d
+          - all
+          default: all
+        description: Aggregation window for the analytics query.
+      tags:
+      - analytics
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+          description: Aggregated booking analytics for the authenticated owner
+        '400':
+          description: Invalid period value
+  /api/v1/auth/google/:
+    get:
+      operationId: auth_google_retrieve
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Access to Google's OAuth consent screen
+  /api/v1/auth/google/callback/:
+    get:
+      operationId: auth_google_callback_retrieve
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: JWT pair on success
+  /api/v1/auth/login/:
+    post:
+      operationId: auth_login_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Login'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/logout-all/:
+    post:
+      operationId: auth_logout_all_create
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/password-reset/:
+    post:
+      operationId: auth_password_reset_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetRequest'
+          description: ''
+  /api/v1/auth/password-reset/confirm/:
+    post:
+      operationId: auth_password_reset_confirm_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetConfirm'
+          description: ''
+  /api/v1/auth/register/:
+    post:
+      operationId: auth_register_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Register'
+          description: ''
+  /api/v1/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: New access/refresh pair
+  /api/v1/auth/verify-email/:
+    get:
+      operationId: auth_verify_email_retrieve
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: Email verified
+  /api/v1/auth/verify-email/resend/:
+    post:
+      operationId: auth_verify_email_resend_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResendVerification'
+          description: ''
+  /api/v1/bookings/:
+    get:
+      operationId: bookings_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: start_time_after
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: start_time_before
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: status
+        schema:
+          type: string
+      tags:
+      - bookings
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookingList'
+          description: ''
+    post:
+      operationId: bookings_create
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateBookingRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateBooking'
+          description: ''
+  /api/v1/bookings/{booking_id}/ical/:
+    get:
+      operationId: bookings_ical_retrieve
+      description: Exports a single booking as a downloadable .ics calendar file.
+      parameters:
+      - in: path
+        name: booking_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - bookings
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            text/calendar:
+              schema:
+                type: string
+                format: binary
+          description: RFC 5545 .ics file for this booking, served as a download.
+        '403':
+          description: Requester is not the owner of this booking's event type.
+        '404':
+          description: Booking not found.
+  /api/v1/bookings/{id}/:
+    get:
+      operationId: bookings_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this booking.
+        required: true
+      tags:
+      - bookings
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+          description: ''
+  /api/v1/bookings/{id}/cancel/:
+    patch:
+      operationId: bookings_cancel_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this booking.
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBookingRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBookingRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBookingRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+          description: ''
+  /api/v1/bookings/{id}/reschedule/:
+    patch:
+      operationId: bookings_reschedule_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this booking.
+        required: true
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRescheduleBookingRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRescheduleBookingRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRescheduleBookingRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescheduleBooking'
+          description: ''
+  /api/v1/events/event-types/:
+    get:
+      operationId: events_event_types_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventTypeListList'
+          description: ''
+    post:
+      operationId: events_event_types_create
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTypeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventTypeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventTypeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+          description: ''
+  /api/v1/events/event-types/{event_type_id}/availability/:
+    get:
+      operationId: events_event_types_availability_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: path
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAvailabilityRuleList'
+          description: ''
+    post:
+      operationId: events_event_types_availability_create
+      parameters:
+      - in: path
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRuleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRuleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AvailabilityRuleRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityRule'
+          description: ''
+  /api/v1/events/event-types/{event_type_id}/availability/{id}/:
+    get:
+      operationId: events_event_types_availability_retrieve
+      parameters:
+      - in: path
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AvailabilityRule'
+          description: ''
+    delete:
+      operationId: events_event_types_availability_destroy
+      parameters:
+      - in: path
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/events/event-types/{event_type_id}/date-override/:
+    get:
+      operationId: events_event_types_date_override_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: path
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDateOverrideList'
+          description: ''
+    post:
+      operationId: events_event_types_date_override_create
+      parameters:
+      - in: path
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DateOverrideRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DateOverrideRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DateOverrideRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DateOverride'
+          description: ''
+  /api/v1/events/event-types/{event_type_id}/date-override/{id}/:
+    get:
+      operationId: events_event_types_date_override_retrieve
+      parameters:
+      - in: path
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DateOverride'
+          description: ''
+    delete:
+      operationId: events_event_types_date_override_destroy
+      parameters:
+      - in: path
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/events/event-types/{event_type_id}/slots/:
+    get:
+      operationId: events_event_types_slots_list
+      parameters:
+      - in: query
+        name: date
+        schema:
+          type: string
+        description: YYYY-MM-DD
+      - in: path
+        name: event_type_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: query
+        name: timezone
+        schema:
+          type: string
+          default: UTC
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+          description: ''
+  /api/v1/events/event-types/{id}/:
+    get:
+      operationId: events_event_types_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event type.
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeDetail'
+          description: ''
+    put:
+      operationId: events_event_types_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event type.
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventTypeUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventTypeUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventTypeUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeUpdate'
+          description: ''
+    patch:
+      operationId: events_event_types_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event type.
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEventTypeUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEventTypeUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEventTypeUpdateRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventTypeUpdate'
+          description: ''
+    delete:
+      operationId: events_event_types_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        description: A UUID string identifying this event type.
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/health/:
+    get:
+      operationId: health_retrieve
+      description: Readiness probe — checks DB, Redis, and Celery worker connectivity.
+      tags:
+      - health
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+          description: All dependencies healthy
+        '503':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+          description: One or more dependencies failing
+  /api/v1/users/me/:
+    get:
+      operationId: users_me_retrieve
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    put:
+      operationId: users_me_update
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+    patch:
+      operationId: users_me_partial_update
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+  /api/v1/users/me/delete/:
+    delete:
+      operationId: users_me_delete_destroy
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/users/me/password/:
+    patch:
+      operationId: users_me_password_partial_update
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedChangePasswordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedChangePasswordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedChangePasswordRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    AnalyticsResponse:
+      type: object
+      properties:
+        total_bookings:
+          type: integer
+        cancelled_bookings:
+          type: integer
+        avg_duration_minutes:
+          type: number
+          format: double
+        period:
+          type: string
+      required:
+      - period
+      - total_bookings
+    AssignmentRuleEnum:
+      enum:
+      - direct
+      - round_robin
+      - collective
+      type: string
+      description: |-
+        * `direct` - Direct
+        * `round_robin` - Round Robin
+        * `collective` - Collective
+    AvailabilityRule:
+      type: object
+      properties:
+        event_type:
+          type: string
+          format: uuid
+          readOnly: true
+        day_of_week:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+      required:
+      - day_of_week
+      - end_time
+      - event_type
+      - start_time
+    AvailabilityRuleRequest:
+      type: object
+      properties:
+        day_of_week:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+      required:
+      - day_of_week
+      - end_time
+      - start_time
+    Booking:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/BookingStatusEnum'
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        event_type:
+          type: string
+          format: uuid
+      required:
+      - end_time
+      - event_type
+      - id
+      - start_time
+    BookingStatusEnum:
+      enum:
+      - confirmed
+      - cancelled
+      - rescheduled
+      type: string
+      description: |-
+        * `confirmed` - Confirmed
+        * `cancelled` - Cancelled
+        * `rescheduled` - Rescheduled
+    CreateBooking:
+      type: object
+      properties:
+        event_type:
+          type: string
+          format: uuid
+        start_time:
+          type: string
+          format: date-time
+        invitee_name:
+          type: string
+        invitee_email:
+          type: string
+          format: email
+        invitee_timezone:
+          type: string
+        invitee_notes:
+          type: string
+          nullable: true
+        idempotency_key:
+          type: string
+          nullable: true
+      required:
+      - event_type
+      - idempotency_key
+      - invitee_email
+      - invitee_name
+      - invitee_timezone
+      - start_time
+    CreateBookingRequest:
+      type: object
+      properties:
+        event_type:
+          type: string
+          format: uuid
+        start_time:
+          type: string
+          format: date-time
+        invitee_name:
+          type: string
+          minLength: 1
+        invitee_email:
+          type: string
+          format: email
+          minLength: 1
+        invitee_timezone:
+          type: string
+          minLength: 1
+        invitee_notes:
+          type: string
+          nullable: true
+        idempotency_key:
+          type: string
+          nullable: true
+      required:
+      - event_type
+      - idempotency_key
+      - invitee_email
+      - invitee_name
+      - invitee_timezone
+      - start_time
+    DateOverride:
+      type: object
+      properties:
+        specific_date:
+          type: string
+          format: date
+        is_unavailable:
+          type: boolean
+        custom_start:
+          type: string
+          format: time
+          nullable: true
+        custom_end:
+          type: string
+          format: time
+          nullable: true
+      required:
+      - specific_date
+    DateOverrideRequest:
+      type: object
+      properties:
+        specific_date:
+          type: string
+          format: date
+        is_unavailable:
+          type: boolean
+        custom_start:
+          type: string
+          format: time
+          nullable: true
+        custom_end:
+          type: string
+          format: time
+          nullable: true
+      required:
+      - specific_date
+    EventType:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        description:
+          type: string
+          nullable: true
+        duration_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        color:
+          type: string
+          maxLength: 7
+        location_type:
+          $ref: '#/components/schemas/LocationTypeEnum'
+        location_value:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        is_paid:
+          type: boolean
+        price_cents:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+          maxLength: 3
+        assignment_rule:
+          $ref: '#/components/schemas/AssignmentRuleEnum'
+        buffer_before_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        buffer_after_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        min_notice_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        max_future_days:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        owner:
+          type: string
+          format: uuid
+          readOnly: true
+        team:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - created_at
+      - duration_minutes
+      - id
+      - location_type
+      - owner
+      - slug
+      - title
+      - updated_at
+    EventTypeDetail:
+      type: object
+      properties:
+        owner:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+        team:
+          type: string
+          format: uuid
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        duration_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        location_type:
+          $ref: '#/components/schemas/LocationTypeEnum'
+        location_value:
+          type: string
+          nullable: true
+        assignment_rule:
+          $ref: '#/components/schemas/AssignmentRuleEnum'
+        buffer_before_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        buffer_after_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        min_notice_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        max_future_days:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - duration_minutes
+      - location_type
+      - owner
+      - title
+    EventTypeList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        is_active:
+          type: boolean
+        owner:
+          type: string
+          format: uuid
+        title:
+          type: string
+          maxLength: 200
+        team:
+          type: string
+          format: uuid
+          nullable: true
+        duration_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        location_type:
+          $ref: '#/components/schemas/LocationTypeEnum'
+      required:
+      - duration_minutes
+      - id
+      - location_type
+      - owner
+      - title
+    EventTypeRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+        duration_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        color:
+          type: string
+          minLength: 1
+          maxLength: 7
+        location_type:
+          $ref: '#/components/schemas/LocationTypeEnum'
+        location_value:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        is_paid:
+          type: boolean
+        price_cents:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+          maxLength: 3
+        assignment_rule:
+          $ref: '#/components/schemas/AssignmentRuleEnum'
+        buffer_before_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        buffer_after_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        min_notice_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        max_future_days:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        team:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - duration_minutes
+      - location_type
+      - title
+    EventTypeUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        team:
+          type: string
+          format: uuid
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        duration_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        location_type:
+          $ref: '#/components/schemas/LocationTypeEnum'
+        location_value:
+          type: string
+          nullable: true
+        assignment_rule:
+          $ref: '#/components/schemas/AssignmentRuleEnum'
+        buffer_before_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        buffer_after_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        min_notice_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        max_future_days:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - duration_minutes
+      - location_type
+      - title
+    EventTypeUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        team:
+          type: string
+          format: uuid
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        duration_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        location_type:
+          $ref: '#/components/schemas/LocationTypeEnum'
+        location_value:
+          type: string
+          nullable: true
+        assignment_rule:
+          $ref: '#/components/schemas/AssignmentRuleEnum'
+        buffer_before_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        buffer_after_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        min_notice_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        max_future_days:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - duration_minutes
+      - location_type
+      - title
+    HealthCheck:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/HealthCheckStatusEnum'
+        checks:
+          type: object
+          additionalProperties:
+            type: string
+          description: Per-dependency status, e.g. database, redis, celery
+      required:
+      - status
+    HealthCheckStatusEnum:
+      enum:
+      - ok
+      - error
+      type: string
+      description: |-
+        * `ok` - ok
+        * `error` - error
+    LocationTypeEnum:
+      enum:
+      - google_meet
+      - zoom
+      - phone
+      - in_person
+      - custom
+      type: string
+      description: |-
+        * `google_meet` - Google Meet
+        * `zoom` - Zoom
+        * `phone` - Phone
+        * `in_person` - In Person
+        * `custom` - Custom
+    Login:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 100
+      required:
+      - email
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 100
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+      required:
+      - email
+      - password
+    PaginatedAvailabilityRuleList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AvailabilityRule'
+    PaginatedBookingList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Booking'
+    PaginatedDateOverrideList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DateOverride'
+    PaginatedEventTypeListList:
+      type: object
+      required:
+      - results
+      properties:
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cD00ODY%3D"
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?cursor=cj0xJnA9NDg3
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventTypeList'
+    PasswordResetConfirm:
+      type: object
+      properties:
+        token:
+          type: string
+        new_password:
+          type: string
+          minLength: 8
+      required:
+      - new_password
+      - token
+    PasswordResetConfirmRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+        new_password:
+          type: string
+          minLength: 8
+      required:
+      - new_password
+      - token
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 100
+      required:
+      - email
+    PasswordResetRequestRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 100
+      required:
+      - email
+    PatchedBookingRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/BookingStatusEnum'
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        event_type:
+          type: string
+          format: uuid
+    PatchedChangePasswordRequest:
+      type: object
+      properties:
+        old_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+    PatchedEventTypeUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        team:
+          type: string
+          format: uuid
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        duration_minutes:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        location_type:
+          $ref: '#/components/schemas/LocationTypeEnum'
+        location_value:
+          type: string
+          nullable: true
+        assignment_rule:
+          $ref: '#/components/schemas/AssignmentRuleEnum'
+        buffer_before_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        buffer_after_min:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        min_notice_hours:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+        max_future_days:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+    PatchedRescheduleBookingRequest:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: date-time
+    PatchedUserProfileRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        username:
+          type: string
+          minLength: 1
+          maxLength: 100
+        timezone:
+          type: string
+          minLength: 1
+        locale:
+          type: string
+          minLength: 1
+          maxLength: 10
+        avatar_url:
+          type: string
+          nullable: true
+    Register:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        username:
+          type: string
+          maxLength: 100
+        timezone:
+          type: string
+      required:
+      - email
+      - id
+      - timezone
+      - username
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        password2:
+          type: string
+          writeOnly: true
+          minLength: 8
+          title: Confirm Password
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        username:
+          type: string
+          minLength: 1
+          maxLength: 100
+        timezone:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+      - password2
+      - timezone
+      - username
+    RescheduleBooking:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: date-time
+      required:
+      - start_time
+    ResendVerification:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 100
+      required:
+      - email
+    ResendVerificationRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 100
+      required:
+      - email
+    Slot:
+      type: object
+      properties:
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+      required:
+      - end
+      - start
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        full_name:
+          type: string
+          readOnly: true
+        username:
+          type: string
+          maxLength: 100
+        timezone:
+          type: string
+        locale:
+          type: string
+          maxLength: 10
+        avatar_url:
+          type: string
+          nullable: true
+        is_verified:
+          type: boolean
+          readOnly: true
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date_joined
+      - email
+      - full_name
+      - id
+      - is_verified
+      - timezone
+      - username
+    UserProfileRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        username:
+          type: string
+          minLength: 1
+          maxLength: 100
+        timezone:
+          type: string
+          minLength: 1
+        locale:
+          type: string
+          minLength: 1
+          maxLength: 10
+        avatar_url:
+          type: string
+          nullable: true
+      required:
+      - timezone
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
