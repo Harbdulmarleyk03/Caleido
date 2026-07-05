@@ -60,7 +60,7 @@ class BookingViewSet(
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
-        
+
     def get_serializer_class(self):
         if self.action == "create":
             return CreateBookingSerializer
@@ -110,7 +110,9 @@ class BookingViewSet(
         url_path="cancel",
         permission_classes=[CancelBookingPermission],
     )
-    @extend_schema(request=None, responses={200: OpenApiResponse(description="Cancelled")})
+    @extend_schema(
+        request=None, responses={200: OpenApiResponse(description="Cancelled")}
+    )
     def cancel(self, request, pk=None):
         booking = get_object_or_404(Booking.objects.select_related("event_type"), pk=pk)
         self.check_object_permissions(request, booking)

@@ -30,6 +30,7 @@ from common.pagination import (
 )
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 
+
 # Event Type Views
 class EventTypeViewSet(viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, BrowsableAPIRenderer]

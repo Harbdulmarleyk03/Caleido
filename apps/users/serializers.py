@@ -101,6 +101,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "date_joined",
             "full_name",
         ]
+
     @extend_schema_field(serializers.CharField())
     def get_full_name(self, obj):
         return obj.get_full_name()
