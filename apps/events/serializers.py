@@ -143,3 +143,8 @@ class DateOverrideSerializer(serializers.ModelSerializer):
                 )
 
         return data
+
+
+class SlotSerializer(serializers.Serializer):
+    start = serializers.DateTimeField()
+    end = serializers.DateTimeField()
