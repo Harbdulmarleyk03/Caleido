@@ -31,6 +31,7 @@ THIRD_PARTY_APPS = [
     "corsheaders",
     "django_filters",
     "django_extensions",
+    "drf_spectacular",
 ]
 
 LOCAL_APPS = [
@@ -38,9 +39,7 @@ LOCAL_APPS = [
     "apps.teams",
     "apps.events",
     "apps.bookings",
-    "apps.integrations",
     "apps.payments",
-    "apps.webhooks",
     "apps.analytics",
     "apps.health",
 ]
@@ -73,6 +72,14 @@ REST_FRAMEWORK = {
         "rest_framework.renderers.JSONRenderer",
     ],
     "EXCEPTION_HANDLER": "common.exceptions.custom_exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Caleido API",
+    "DESCRIPTION": "Production-grade Appointment Booking and Scheduling API.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 SIMPLE_JWT = {
