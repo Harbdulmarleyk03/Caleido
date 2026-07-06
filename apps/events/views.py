@@ -28,10 +28,18 @@ from common.pagination import (
     DateOverrideCursorPagination,
     EventTypeCursorPagination,
 )
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema_view
 
 
 # Event Type Views
+@extend_schema_view(
+    list=extend_schema(tags=["Event Types"]),
+    create=extend_schema(tags=["Event Types"]),
+    retrieve=extend_schema(tags=["Event Types"]),
+    update=extend_schema(tags=["Event Types"]),
+    partial_update=extend_schema(tags=["Event Types"]),
+    destroy=extend_schema(tags=["Event Types"]),
+)
 class EventTypeViewSet(viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
     pagination_class = EventTypeCursorPagination
@@ -114,6 +122,7 @@ class EventTypeViewSet(viewsets.ModelViewSet):
 
 
 # Availability Rules Views
+@extend_schema(tags=["Event Types"])
 class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
@@ -146,6 +155,7 @@ class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
         )
 
 
+@extend_schema(tags=["Event Types"])
 class AvailabilityRuleDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
@@ -157,6 +167,7 @@ class AvailabilityRuleDetailView(generics.RetrieveDestroyAPIView):
         )
 
 
+@extend_schema(tags=["Event Types"])
 class DateOverrideListCreateView(generics.ListCreateAPIView):
     serializer_class = DateOverrideSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
@@ -189,6 +200,7 @@ class DateOverrideListCreateView(generics.ListCreateAPIView):
         )
 
 
+@extend_schema(tags=["Event Types"])
 class DateOverrideDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = DateOverrideSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
@@ -204,6 +216,7 @@ class SlotListView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
+        tags=["Event Types"],
         parameters=[
             OpenApiParameter("date", str, description="YYYY-MM-DD"),
             OpenApiParameter("timezone", str, required=False, default="UTC"),

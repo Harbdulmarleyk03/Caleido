@@ -31,6 +31,8 @@ from drf_spectacular.types import OpenApiTypes
     list=extend_schema(tags=["Bookings"]),
     create=extend_schema(tags=["Bookings"]),
     retrieve=extend_schema(tags=["Bookings"]),
+    cancel=extend_schema(tags=["Bookings"]),
+    reschedule=extend_schema(tags=["Bookings"]),
 )
 class BookingViewSet(
     mixins.CreateModelMixin,
@@ -116,7 +118,6 @@ class BookingViewSet(
         permission_classes=[CancelBookingPermission],
     )
     @extend_schema(
-        tags=["Bookings"],
         request=None,
         responses={200: OpenApiResponse(description="Cancelled")},
     )
@@ -132,9 +133,7 @@ class BookingViewSet(
         url_path="reschedule",
         permission_classes=[RescheduleBookingPermission],
     )
-    @extend_schema(
-        tags=["Bookings"], responses={200: OpenApiResponse(description="Rescheduled")}
-    )
+    @extend_schema(responses={200: OpenApiResponse(description="Rescheduled")})
     def reschedule(self, request, pk=None):
         booking = get_object_or_404(Booking.objects.select_related("event_type"), pk=pk)
         self.check_object_permissions(request, booking)
