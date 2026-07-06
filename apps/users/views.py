@@ -30,6 +30,7 @@ User = get_user_model()
 auth_service = AuthService()
 
 
+@extend_schema(tags=["Auth"])
 class RegisterView(APIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
@@ -48,7 +49,9 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@extend_schema(responses={200: OpenApiResponse(description="Email verified")})
+@extend_schema(
+    tags=["Auth"], responses={200: OpenApiResponse(description="Email verified")}
+)
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
 
@@ -70,6 +73,7 @@ class VerifyEmailView(APIView):
         )
 
 
+@extend_schema(tags=["Auth"])
 class ResendVerificationEmailView(APIView):
     permission_classes = [AllowAny]
     serializer_class = ResendVerificationSerializer
@@ -115,6 +119,7 @@ class ResendVerificationEmailView(APIView):
         )
 
 
+@extend_schema(tags=["Auth"])
 class LoginView(APIView):
     serializer_class = LoginSerializer
     permission_classes = [AllowAny]
@@ -132,6 +137,7 @@ class LoginView(APIView):
 
 
 @extend_schema(
+    tags=["Auth"],
     request={
         "application/json": {
             "type": "object",
@@ -164,6 +170,7 @@ class TokenRefreshView(APIView):
 
 
 @extend_schema(
+    tags=["Auth"],
     request={
         "application/json": {
             "type": "object",
@@ -194,7 +201,7 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@extend_schema(request=None, responses={204: None})
+@extend_schema(tags=["Auth"], request=None, responses={204: None})
 class LogoutAllView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -209,6 +216,7 @@ class LogoutAllView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+@extend_schema(tags=["Auth"])
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
     serializer_class = PasswordResetRequestSerializer
@@ -225,6 +233,7 @@ class PasswordResetRequestView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
+@extend_schema(tags=["Auth"])
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
     serializer_class = PasswordResetConfirmSerializer
@@ -251,6 +260,7 @@ class PasswordResetConfirmView(APIView):
             )
 
 
+@extend_schema(tags=["Users"])
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
@@ -270,6 +280,7 @@ class ChangePasswordView(APIView):
 
 
 @extend_schema(
+    tags=["Auth"],
     request=None,
     responses={
         200: OpenApiResponse(description="Access to Google's OAuth consent screen")
@@ -283,7 +294,9 @@ class GoogleOAuthRedirectView(APIView):
         return Response({"url": url}, status=status.HTTP_200_OK)
 
 
-@extend_schema(responses={200: OpenApiResponse(description="JWT pair on success")})
+@extend_schema(
+    tags=["Auth"], responses={200: OpenApiResponse(description="JWT pair on success")}
+)
 class GoogleOAuthCallbackView(APIView):
     permission_classes = [AllowAny]
 
@@ -309,6 +322,11 @@ class GoogleOAuthCallbackView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+@extend_schema(
+    tags=["Users"],
+    request=None,
+    responses={200: OpenApiResponse(description="User profile data")},
+)
 class UserProfileView(RetrieveUpdateAPIView):
     serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
@@ -320,7 +338,7 @@ class UserProfileView(RetrieveUpdateAPIView):
         return self.request.user
 
 
-@extend_schema(request=None, responses={204: None})
+@extend_schema(tags=["Users"], request=None, responses={204: None})
 class AccountDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -23,10 +23,15 @@ from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.core.exceptions import PermissionDenied
 from apps.bookings.ical import IcalExportService
-from drf_spectacular.utils import extend_schema, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiResponse, extend_schema_view
 from drf_spectacular.types import OpenApiTypes
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Bookings"]),
+    create=extend_schema(tags=["Bookings"]),
+    retrieve=extend_schema(tags=["Bookings"]),
+)
 class BookingViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
@@ -111,7 +116,9 @@ class BookingViewSet(
         permission_classes=[CancelBookingPermission],
     )
     @extend_schema(
-        request=None, responses={200: OpenApiResponse(description="Cancelled")}
+        tags=["Bookings"],
+        request=None,
+        responses={200: OpenApiResponse(description="Cancelled")},
     )
     def cancel(self, request, pk=None):
         booking = get_object_or_404(Booking.objects.select_related("event_type"), pk=pk)
@@ -125,7 +132,9 @@ class BookingViewSet(
         url_path="reschedule",
         permission_classes=[RescheduleBookingPermission],
     )
-    @extend_schema(responses={200: OpenApiResponse(description="Rescheduled")})
+    @extend_schema(
+        tags=["Bookings"], responses={200: OpenApiResponse(description="Rescheduled")}
+    )
     def reschedule(self, request, pk=None):
         booking = get_object_or_404(Booking.objects.select_related("event_type"), pk=pk)
         self.check_object_permissions(request, booking)
@@ -144,6 +153,7 @@ class BookingIcalView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
+        tags=["Bookings"],
         responses={
             (200, "text/calendar"): OpenApiResponse(
                 response=OpenApiTypes.BINARY,
