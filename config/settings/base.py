@@ -80,6 +80,14 @@ SPECTACULAR_SETTINGS = {
     "DESCRIPTION": "Production-grade Appointment Booking and Scheduling API.",
     "VERSION": "1.0.0",
     "SERVE_INCLUDE_SCHEMA": False,
+    "TAGS": [
+        {"name": "Auth"},
+        {"name": "Users"},
+        {"name": "Event Types"},
+        {"name": "Bookings"},
+        {"name": "Analytics"},
+        {"name": "Health"},
+    ],
 }
 
 SIMPLE_JWT = {
@@ -150,6 +158,9 @@ CACHES = {
         "TIMEOUT": 300,
     }
 }
+
+CELERY_TASK_ALWAYS_EAGER = env.bool("CELERY_TASK_ALWAYS_EAGER", default=False)
+REMINDERS_ENABLED = env.bool("REMINDERS_ENABLED", default=True)
 
 EMAIL_BACKEND = env(
     "EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"

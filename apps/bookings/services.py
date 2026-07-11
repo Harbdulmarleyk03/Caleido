@@ -10,12 +10,15 @@ from apps.bookings.tasks import (
 from config.celery import app
 from datetime import timedelta
 from django.utils import timezone
+from django.conf import settings
 
 
 class BookingService:
 
     @staticmethod
     def schedule_booking_reminder(booking_id):
+        if not settings.REMINDERS_ENABLED:
+            return
         booking = Booking.objects.select_related("invitee", "event_type__owner").get(
             id=booking_id
         )
