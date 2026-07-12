@@ -50,11 +50,13 @@ class HealthService:
             ping_result = app.control.ping(
                 timeout=settings.HEALTH_CHECK_TIMEOUTS["CELERY"]
             )
-        except OSError as e:
-            raise ServiceUnavailableError("IOError") from e
         except NotImplementedError as e:
             raise ServiceUnavailableError(
                 "NotImplementedError: Make sure CELERY_RESULT_BACKEND is set"
+            ) from e
+        except Exception as e:
+            raise ServiceUnavailableError(
+                f"Unable to reach Celery broker: {type(e).__name__}"
             ) from e
         else:
             if not ping_result:
