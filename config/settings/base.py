@@ -154,7 +154,6 @@ CACHES = {
         "OPTIONS": {
             "IGNORE_EXCEPTIONS": env.bool("REDIS_IGNORE_EXCEPTIONS", default=True),
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None},
         },
         "TIMEOUT": 300,
     }
