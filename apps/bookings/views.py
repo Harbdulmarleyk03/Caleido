@@ -28,11 +28,17 @@ from drf_spectacular.types import OpenApiTypes
 
 
 @extend_schema_view(
-    list=extend_schema(tags=["Bookings"]),
-    create=extend_schema(tags=["Bookings"]),
-    retrieve=extend_schema(tags=["Bookings"]),
-    cancel=extend_schema(tags=["Bookings"]),
-    reschedule=extend_schema(tags=["Bookings"]),
+    list=extend_schema(
+        tags=["Bookings"], summary="List all bookings for the authenticated owner"
+    ),
+    create=extend_schema(tags=["Bookings"], summary="Create a new booking"),
+    retrieve=extend_schema(
+        tags=["Bookings"], summary="Retrieve details of a specific booking"
+    ),
+    cancel=extend_schema(tags=["Bookings"], summary="Cancel an existing booking"),
+    reschedule=extend_schema(
+        tags=["Bookings"], summary="Reschedule an existing booking"
+    ),
 )
 class BookingViewSet(
     mixins.CreateModelMixin,
@@ -119,6 +125,7 @@ class BookingViewSet(
     )
     @extend_schema(
         request=None,
+        summary="Cancel an existing booking",
         responses={200: OpenApiResponse(description="Cancelled")},
     )
     def cancel(self, request, pk=None):
@@ -133,7 +140,10 @@ class BookingViewSet(
         url_path="reschedule",
         permission_classes=[RescheduleBookingPermission],
     )
-    @extend_schema(responses={200: OpenApiResponse(description="Rescheduled")})
+    @extend_schema(
+        summary="Reschedule an existing booking",
+        responses={200: OpenApiResponse(description="Rescheduled")},
+    )
     def reschedule(self, request, pk=None):
         booking = get_object_or_404(Booking.objects.select_related("event_type"), pk=pk)
         self.check_object_permissions(request, booking)
@@ -153,6 +163,7 @@ class BookingIcalView(APIView):
 
     @extend_schema(
         tags=["Bookings"],
+        summary="Export a booking as an .ics calendar file",
         responses={
             (200, "text/calendar"): OpenApiResponse(
                 response=OpenApiTypes.BINARY,

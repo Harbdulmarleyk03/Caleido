@@ -33,12 +33,20 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter, extend_schema
 
 # Event Type Views
 @extend_schema_view(
-    list=extend_schema(tags=["Event Types"]),
-    create=extend_schema(tags=["Event Types"]),
-    retrieve=extend_schema(tags=["Event Types"]),
-    update=extend_schema(tags=["Event Types"]),
-    partial_update=extend_schema(tags=["Event Types"]),
-    destroy=extend_schema(tags=["Event Types"]),
+    list=extend_schema(
+        tags=["Event Types"], summary="List all event types for the authenticated owner"
+    ),
+    create=extend_schema(tags=["Event Types"], summary="Create a new event type"),
+    retrieve=extend_schema(
+        tags=["Event Types"], summary="Retrieve details of a specific event type"
+    ),
+    update=extend_schema(tags=["Event Types"], summary="Update an existing event type"),
+    partial_update=extend_schema(
+        tags=["Event Types"], summary="Partially update an existing event type"
+    ),
+    destroy=extend_schema(
+        tags=["Event Types"], summary="Delete an existing event type"
+    ),
 )
 class EventTypeViewSet(viewsets.ModelViewSet):
     renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
@@ -122,7 +130,9 @@ class EventTypeViewSet(viewsets.ModelViewSet):
 
 
 # Availability Rules Views
-@extend_schema(tags=["Event Types"])
+@extend_schema(
+    tags=["Event Types"], summary="List and create availability rules for an event type"
+)
 class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
@@ -155,7 +165,10 @@ class AvailabilityRuleListCreateView(generics.ListCreateAPIView):
         )
 
 
-@extend_schema(tags=["Event Types"])
+@extend_schema(
+    tags=["Event Types"],
+    summary="Retrieve or delete an availability rule for an event type",
+)
 class AvailabilityRuleDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = AvailabilityRuleSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
@@ -167,7 +180,9 @@ class AvailabilityRuleDetailView(generics.RetrieveDestroyAPIView):
         )
 
 
-@extend_schema(tags=["Event Types"])
+@extend_schema(
+    tags=["Event Types"], summary="List and create date overrides for an event type"
+)
 class DateOverrideListCreateView(generics.ListCreateAPIView):
     serializer_class = DateOverrideSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
@@ -200,7 +215,9 @@ class DateOverrideListCreateView(generics.ListCreateAPIView):
         )
 
 
-@extend_schema(tags=["Event Types"])
+@extend_schema(
+    tags=["Event Types"], summary="Retrieve or delete a date override for an event type"
+)
 class DateOverrideDetailView(generics.RetrieveDestroyAPIView):
     serializer_class = DateOverrideSerializer
     permission_classes = [IsAuthenticated, IsNestedResourceOwner]
@@ -217,6 +234,7 @@ class SlotListView(APIView):
 
     @extend_schema(
         tags=["Event Types"],
+        summary="List available time slots for a specific date and event type",
         parameters=[
             OpenApiParameter("date", str, description="YYYY-MM-DD"),
             OpenApiParameter("timezone", str, required=False, default="UTC"),

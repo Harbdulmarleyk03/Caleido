@@ -12,6 +12,8 @@ class AnalyticsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
+        tags=["Analytics"],
+        summary="Get aggregated booking analytics for the authenticated owner",
         parameters=[
             OpenApiParameter(
                 name="period",

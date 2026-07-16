@@ -11,6 +11,8 @@ class HealthAPIView(APIView):
     authentication_classes = []
 
     @extend_schema(
+        tags=["Health"],
+        summary="Readiness probe — checks DB, Redis, and Celery worker connectivity.",
         request=None,
         responses={
             200: OpenApiResponse(

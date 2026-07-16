@@ -30,7 +30,7 @@ User = get_user_model()
 auth_service = AuthService()
 
 
-@extend_schema(tags=["Auth"])
+@extend_schema(tags=["Auth"], summary="Register a new user")
 class RegisterView(APIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
@@ -50,7 +50,9 @@ class RegisterView(APIView):
 
 
 @extend_schema(
-    tags=["Auth"], responses={200: OpenApiResponse(description="Email verified")}
+    tags=["Auth"],
+    responses={200: OpenApiResponse(description="Email verified")},
+    summary="Verify user email",
 )
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]
@@ -73,7 +75,7 @@ class VerifyEmailView(APIView):
         )
 
 
-@extend_schema(tags=["Auth"])
+@extend_schema(tags=["Auth"], summary="Resend verification email")
 class ResendVerificationEmailView(APIView):
     permission_classes = [AllowAny]
     serializer_class = ResendVerificationSerializer
@@ -119,7 +121,7 @@ class ResendVerificationEmailView(APIView):
         )
 
 
-@extend_schema(tags=["Auth"])
+@extend_schema(tags=["Auth"], summary="Login user and return JWT tokens")
 class LoginView(APIView):
     serializer_class = LoginSerializer
     permission_classes = [AllowAny]
@@ -138,6 +140,7 @@ class LoginView(APIView):
 
 @extend_schema(
     tags=["Auth"],
+    summary="Refresh JWT tokens",
     request={
         "application/json": {
             "type": "object",
@@ -171,6 +174,7 @@ class TokenRefreshView(APIView):
 
 @extend_schema(
     tags=["Auth"],
+    summary="Logout user by blacklisting the provided refresh token",
     request={
         "application/json": {
             "type": "object",
@@ -201,7 +205,12 @@ class LogoutView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@extend_schema(tags=["Auth"], request=None, responses={204: None})
+@extend_schema(
+    tags=["Auth"],
+    summary="Logout user from all devices",
+    request=None,
+    responses={204: None},
+)
 class LogoutAllView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -216,7 +225,7 @@ class LogoutAllView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-@extend_schema(tags=["Auth"])
+@extend_schema(tags=["Auth"], summary="Request password reset email")
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
     serializer_class = PasswordResetRequestSerializer
@@ -233,7 +242,7 @@ class PasswordResetRequestView(APIView):
         return Response(status=status.HTTP_200_OK)
 
 
-@extend_schema(tags=["Auth"])
+@extend_schema(tags=["Auth"], summary="Confirm password reset")
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
     serializer_class = PasswordResetConfirmSerializer
@@ -260,7 +269,7 @@ class PasswordResetConfirmView(APIView):
             )
 
 
-@extend_schema(tags=["Users"])
+@extend_schema(tags=["Users"], summary="Change user password")
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
     serializer_class = ChangePasswordSerializer
@@ -281,6 +290,7 @@ class ChangePasswordView(APIView):
 
 @extend_schema(
     tags=["Auth"],
+    summary="Redirect to Google OAuth consent screen",
     request=None,
     responses={
         200: OpenApiResponse(description="Access to Google's OAuth consent screen")
@@ -295,7 +305,9 @@ class GoogleOAuthRedirectView(APIView):
 
 
 @extend_schema(
-    tags=["Auth"], responses={200: OpenApiResponse(description="JWT pair on success")}
+    tags=["Auth"],
+    summary="Handle Google OAuth callback",
+    responses={200: OpenApiResponse(description="JWT pair on success")},
 )
 class GoogleOAuthCallbackView(APIView):
     permission_classes = [AllowAny]
@@ -324,6 +336,7 @@ class GoogleOAuthCallbackView(APIView):
 
 @extend_schema(
     tags=["Users"],
+    summary="Retrieve or update user profile",
     request=None,
     responses={200: OpenApiResponse(description="User profile data")},
 )
@@ -338,7 +351,9 @@ class UserProfileView(RetrieveUpdateAPIView):
         return self.request.user
 
 
-@extend_schema(tags=["Users"], request=None, responses={204: None})
+@extend_schema(
+    tags=["Users"], summary="Delete user account", request=None, responses={204: None}
+)
 class AccountDeleteView(APIView):
     permission_classes = [IsAuthenticated]
 
