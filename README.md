@@ -121,7 +121,16 @@ pytest --cov --cov-report=term-missing
 ---
 
 ## Screenshots
-swagger screenshot, ERD and CI
+swagger screenshot
+!![Swagger UI](display/display 001.png)
+![Swagger UI](display/display 002.png)
+![Swagger UI](display/display 003.png)
+![Swagger UI](display/display 004.png)
+![Swagger UI](display/display 005.png)
+![Swagger UI](display/display 006.png)
+![Swagger UI](display/display 007.png)
+![Swagger UI](display/display 008.png)
+![Swagger UI](display/display 009.png)
 ---
 
 ## 📸 Architecture
