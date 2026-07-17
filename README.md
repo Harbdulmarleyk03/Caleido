@@ -121,16 +121,16 @@ pytest --cov --cov-report=term-missing
 ---
 
 ## Screenshots
-swagger screenshot
-!![Swagger UI](display/display 001.png)
-![Swagger UI](display/display 002.png)
-![Swagger UI](display/display 003.png)
-![Swagger UI](display/display 004.png)
-![Swagger UI](display/display 005.png)
-![Swagger UI](display/display 006.png)
-![Swagger UI](display/display 007.png)
-![Swagger UI](display/display 008.png)
-![Swagger UI](display/display 009.png)
+Swagger UI Documentation
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20001.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20002.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20003.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20004.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20005.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20006.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20007.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20008.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20009.png)
 ---
 
 ## 📸 Architecture
