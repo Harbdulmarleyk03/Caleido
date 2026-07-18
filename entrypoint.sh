@@ -31,6 +31,24 @@ EOF
 echo "Applying migrations..."
 python manage.py migrate
 
+echo "Syncing superuser..."
+python manage.py shell -c "
+from django.contrib.auth import get_user_model
+import os
+User = get_user_model()
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+if email and password:
+    user, created = User.objects.get_or_create(email=email, defaults={'is_staff': True, 'is_superuser': True})
+    user.is_staff = True
+    user.is_superuser = True
+    user.set_password(password)
+    user.save()
+    print('Created' if created else 'Updated', 'superuser:', email)
+else:
+    print('DJANGO_SUPERUSER_EMAIL or DJANGO_SUPERUSER_PASSWORD not set, skipping superuser sync')
+"
+
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
