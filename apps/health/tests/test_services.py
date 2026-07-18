@@ -66,8 +66,14 @@ class TestHealthCheck:
         mock_cache.get.return_value = "test-probe-key"
         with patch("apps.health.services.uuid.uuid4", return_value="test-probe-key"):
             response = api_client.get("/api/v1/health/")
-        assert response.status_code == 503
+
+        # Celery is intentionally non-critical: DB and Redis are healthy,
+        # so overall status stays "ok" even though celery is down.
+        assert response.status_code == 200
+        assert response.data["status"] == "ok"
         assert response.data["checks"]["celery"] == "error"
+        assert response.data["checks"]["db"] == "ok"
+        assert response.data["checks"]["redis"] == "ok"
 
     @patch("apps.health.services.connections")
     @patch("apps.health.services.cache")
