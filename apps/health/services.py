@@ -80,11 +80,14 @@ class HealthService:
             results["redis"] = "error"
             overall_status = "error"
 
+        # Celery is intentionally excluded from overall_status: this deployment
+        # has no persistent worker (Render free tier has none without payment),
+        # so "celery": "error" here is expected and does not indicate an outage.
+
         try:
             HealthService.check_celery()
             results["celery"] = "ok"
         except ServiceUnavailableError:
             results["celery"] = "error"
-            overall_status = "error"
 
         return {"status": overall_status, "checks": results}
