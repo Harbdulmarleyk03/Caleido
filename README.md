@@ -121,7 +121,16 @@ pytest --cov --cov-report=term-missing
 ---
 
 ## Screenshots
-swagger screenshot, ERD and CI
+Swagger UI Documentation
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20001.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20002.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20003.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20004.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20005.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20006.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20007.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20008.png)
+![Swagger UI](https://github.com/Harbdulmarleyk03/Caleido/blob/main/display/display%20009.png)
 ---
 
 ## 📸 Architecture
