@@ -22,14 +22,6 @@ RUN pip install --no-cache-dir -r requirements/base.txt
 # Copy project files
 COPY . .
 
-# Collect static files at build time (needs dummy settings values so
-# Django can boot without real secrets/DB access during build)
-RUN SECRET_KEY=build-time-dummy-key \
-    DEBUG=False \
-    ALLOWED_HOSTS=* \
-    DJANGO_SETTINGS_MODULE=config.settings.production \
-    python manage.py collectstatic --noinput
-
 # Copy entrypoint script and make it executable
 COPY entrypoint.sh /entrypoint.sh
 
