@@ -7,6 +7,14 @@ ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 CELERY_BROKER_URL = env("CELERY_BROKER_URL")
 CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
 
+
+# Upstash Redis requires TLS (rediss://), and Celery's Redis transport
+# needs explicit ssl_cert_reqs when using rediss:// or it raises ValueError.
+# CERT_NONE skips cert verification — acceptable here since Upstash manages
+# its own cert and this is a trusted managed connection, not raw internet traffic.
+CELERY_BROKER_USE_SSL = {"ssl_cert_reqs": "CERT_NONE"}
+CELERY_REDIS_BACKEND_USE_SSL = {"ssl_cert_reqs": "CERT_NONE"}
+
 # Security headers
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
