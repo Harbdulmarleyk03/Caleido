@@ -10,7 +10,11 @@
 ![CI](https://github.com/Harbdulmarleyk03/Caleido/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**Repo:** [github.com/Harbdulmarleyk03/Caleido](https://github.com/Harbdulmarleyk03/Caleido) · **API Docs:** `/api/docs/` (Swagger) · `/api/redoc/` (ReDoc) · `/api/schema/` (OpenAPI 3.1)
+**Repo:** [github.com/Harbdulmarleyk03/Caleido](https://github.com/Harbdulmarleyk03/Caleido) · 
+**Live Demo:** https://caleido-api.onrender.com •
+**Swagger:** https://caleido-api.onrender.com/api/docs/ •
+**ReDoc:** https://caleido-api.onrender.com/api/redoc/ •
+**Health check:** https://caleido-api.onrender.com/api/v1/health/
 
 ---
 
